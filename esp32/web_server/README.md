@@ -1,7 +1,7 @@
 # Web Server for ESP32-CAM + Motor Controller
 
 <p align="center">
-  <img src="/imgs/esp32-webserver-example.png" width="450" title="Web Server Example">
+  <img src="./imgs/esp32-webserver-example.png" width="450" title="Web Server Example">
 </p>
 
 The above screenshot is an example of the web server interface that this code sample generates. Full tutorial [here](https://randomnerdtutorials.com/esp32-cam-car-robot-web-server/) is available for more information.
@@ -26,7 +26,7 @@ Next is the pin numbers that are being used for your hardware configuration. The
 Using ArduinoIDE, flash the `Car_Robot_Camera_Web_Server.ino` file to your ESP32-CAM device using standard methods. Once you reset your device, the serial monitor will display the IP address required to connect to the web server hosted by your ESP32-CAM. Example below:
 
 <p align="center">
-  <img src="/imgs/serial_monitor_output_example.png" width="450" title="Serial Monitor Output Example">
+  <img src="./imgs/serial_monitor_output_example.png" width="450" title="Serial Monitor Output Example">
 </p>
 
 Make sure you are connected to the same WiFi network specified in the `.ino` file above, and use your browser to connect to the web server. 
