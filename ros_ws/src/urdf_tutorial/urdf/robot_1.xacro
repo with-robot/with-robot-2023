@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="urdf_tutorial">
+
+    <!-- COLOR -->
+    <material name="white">
+        <color rgba="1 1 1 1" />
+    </material>
+
+    <!-- BASE -->
+    <link name="base_link">
+    </link>
+
+    <!-- BODY LINK -->
+    <joint name="body_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="body"/>
+    </joint>
+
+    <link name="body">
+        <visual>
+            <geometry>
+                <!-- <box size="1 1 1"/> -->
+                <!-- <cylinder radius="1" length="0.5"/> -->
+                <sphere radius="1.0"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+    </link>
+
+</robot>
