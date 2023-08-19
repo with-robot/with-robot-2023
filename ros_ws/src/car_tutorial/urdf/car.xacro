@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="urdf_tutorial">
 
-    <!-- MACROS -->
-    <xacro:include filename="macros.xacro"/>
-
     <!-- COLOR -->
     <material name="white">
         <color rgba="1 1 1 1" />
@@ -46,14 +43,7 @@
                 <box size="0.2 0.1 0.06"/>
             </geometry>
         </collision>
-        <xacro:inertial_box mass="0.5" x="0.2" y="0.1" z="0.06">
-            <origin xyz="0.1 0 0.03" rpy="0 0 0"/>
-        </xacro:inertial_box>
     </link>
-
-    <gazebo reference="body">
-        <material>Gazebo/White</material>
-    </gazebo>
 
     <!-- LEFT WHEEL LINK -->
     <joint name="left_wheel_joint" type="continuous">
@@ -75,14 +65,7 @@
                 <cylinder radius="0.03" length="0.03"/>
             </geometry>
         </collision>
-        <xacro:inertial_cylinder mass="0.1" length="0.03" radius="0.03">
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-        </xacro:inertial_cylinder>
     </link>
-
-    <gazebo reference="left_wheel">
-        <material>Gazebo/Black</material>
-    </gazebo>
 
     <!-- RIGHT WHEEL LINK -->
     <joint name="right_wheel_joint" type="continuous">
@@ -104,14 +87,7 @@
                 <cylinder radius="0.03" length="0.03"/>
             </geometry>
         </collision>
-        <xacro:inertial_cylinder mass="0.1" length="0.03" radius="0.03">
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-        </xacro:inertial_cylinder>
     </link>
-
-    <gazebo reference="right_wheel">
-        <material>Gazebo/Black</material>
-    </gazebo>
 
     <!-- CASTER WHEEL LINK -->
     <joint name="caster_wheel_joint" type="fixed">
@@ -132,17 +108,7 @@
                 <sphere radius="0.03"/>
             </geometry>
         </collision>
-        <xacro:inertial_sphere mass="0.1" radius="0.03">
-            <origin xyz="0 0 0" rpy="0 0 0"/>
-        </xacro:inertial_sphere>
     </link>
-
-    <gazebo reference="caster_wheel">
-        <material>Gazebo/Blue</material>
-
-        <mu1 value="0.001"/>
-        <mu2 value="0.001"/>
-    </gazebo>
 
     <!-- CAMERA -->
     <joint name="camera_joint" type="fixed">
