@@ -26,6 +26,7 @@ setup(
     entry_points={
         'console_scripts': [
             'fake_driver = car_tutorial.fake_driver:main',
+            'unity_driver = car_tutorial.unity_driver:main',
         ],
     },
 )
