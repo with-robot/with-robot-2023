@@ -1,0 +1,16 @@
+package.xml
+setup.cfg
+setup.py
+launch/robot_1.launch.py
+launch/robot_2.launch.py
+resource/urdf_tutorial
+urdf/robot_1.xacro
+urdf/robot_2.xacro
+urdf_tutorial/__init__.py
+urdf_tutorial.egg-info/PKG-INFO
+urdf_tutorial.egg-info/SOURCES.txt
+urdf_tutorial.egg-info/dependency_links.txt
+urdf_tutorial.egg-info/entry_points.txt
+urdf_tutorial.egg-info/requires.txt
+urdf_tutorial.egg-info/top_level.txt
+urdf_tutorial.egg-info/zip-safe

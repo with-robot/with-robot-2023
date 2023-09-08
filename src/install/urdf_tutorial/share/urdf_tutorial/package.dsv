@@ -1,0 +1,9 @@
+source;share/urdf_tutorial/hook/pythonpath.ps1
+source;share/urdf_tutorial/hook/pythonpath.dsv
+source;share/urdf_tutorial/hook/pythonpath.sh
+source;share/urdf_tutorial/hook/ament_prefix_path.ps1
+source;share/urdf_tutorial/hook/ament_prefix_path.dsv
+source;share/urdf_tutorial/hook/ament_prefix_path.sh
+source;../../build/urdf_tutorial/share/urdf_tutorial/hook/pythonpath_develop.ps1
+source;../../build/urdf_tutorial/share/urdf_tutorial/hook/pythonpath_develop.dsv
+source;../../build/urdf_tutorial/share/urdf_tutorial/hook/pythonpath_develop.sh
