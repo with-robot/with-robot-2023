@@ -1,0 +1,9 @@
+source;share/car_tutorial/hook/pythonpath.ps1
+source;share/car_tutorial/hook/pythonpath.dsv
+source;share/car_tutorial/hook/pythonpath.sh
+source;share/car_tutorial/hook/ament_prefix_path.ps1
+source;share/car_tutorial/hook/ament_prefix_path.dsv
+source;share/car_tutorial/hook/ament_prefix_path.sh
+source;../../build/car_tutorial/share/car_tutorial/hook/pythonpath_develop.ps1
+source;../../build/car_tutorial/share/car_tutorial/hook/pythonpath_develop.dsv
+source;../../build/car_tutorial/share/car_tutorial/hook/pythonpath_develop.sh

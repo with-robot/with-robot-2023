@@ -1,0 +1,3 @@
+[console_scripts]
+fake_driver = car_tutorial.fake_driver:main
+
