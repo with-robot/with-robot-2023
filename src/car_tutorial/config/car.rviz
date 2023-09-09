@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /RobotModel1
         - /RobotModel1/Description Topic1
+        - /Image1
       Splitter Ratio: 0.5
     Tree Height: 361
   - Class: rviz_common/Selection
@@ -64,6 +65,10 @@ Visualization Manager:
           Value: true
         caster_wheel:
           Value: true
+        left_wheel:
+          Value: true
+        right_wheel:
+          Value: true
       Marker Scale: 1
       Name: TF
       Show Arrows: true
@@ -77,6 +82,10 @@ Visualization Manager:
                 {}
             caster_wheel:
               {}
+          left_wheel:
+            {}
+          right_wheel:
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -150,7 +159,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: ""
+        Value: /img_raw
       Value: true
   Enabled: true
   Global Options:
