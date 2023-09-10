@@ -1,0 +1,2 @@
+source;share/car_odom/environment/ament_prefix_path.sh
+source;share/car_odom/environment/path.sh

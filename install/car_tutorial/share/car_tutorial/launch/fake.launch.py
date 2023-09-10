@@ -29,6 +29,14 @@ def generate_launch_description():
         parameters=[]
     )
 
+    # odometry publisher
+    odometry_publisher = Node(
+        package='car_odom',
+        executable='car_odom',
+        output='screen',
+        parameters=[]
+    )
+
     # rviz2
     rviz = Node(
         package='rviz2',
@@ -42,6 +50,7 @@ def generate_launch_description():
         [
             rsp,
             fake_driver,
+            odometry_publisher,
             rviz
         ]
     )

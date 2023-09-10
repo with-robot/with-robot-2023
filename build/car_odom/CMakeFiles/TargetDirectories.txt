@@ -1,0 +1,10 @@
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/uninstall.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/car_odom_uninstall.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/car_odom.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/test.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/edit_cache.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/rebuild_cache.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/list_install_components.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/install.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/install/local.dir
+/root/workspace/ros_ws/build/car_odom/CMakeFiles/install/strip.dir
