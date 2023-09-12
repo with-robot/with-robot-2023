@@ -1,0 +1,50 @@
+# pack-refs with: peeled fully-peeled sorted 
+b5603e72bf191947f245a8a8e61bdd4056098e59 refs/remotes/origin/Roscpp
+b26a93f9e6b0da765f9b233fb906b5c2c538e5ac refs/remotes/origin/Roscpp-dev
+88b3bf2e3ae544e814c104694b114f2893fff619 refs/remotes/origin/backport-0.4.0
+ad04c1ffb3a3ae0d78320af2cb5cb418cc932f40 refs/remotes/origin/dev-ros
+93e63d25eb9168e5070dd7d929a66135c5371c22 refs/remotes/origin/dev-ros2
+093c30266c73bc8587fbb1e5b5877a3539057044 refs/remotes/origin/devin/fix-endpoint-launch
+38500873ebc5e1b063d8eacc65d16c2589d02883 refs/remotes/origin/devin/fix-launch
+0c8537e4862b268062c9d5949366b192b6e1fee0 refs/remotes/origin/devin/fix-launch-params
+22c0d83c5a578343625bb85322c7eff4662456c6 refs/remotes/origin/hamid/update-package-version-0.7.0
+ca2a0e59084c2bcfb72cd50c4fb7a73fd3365460 refs/remotes/origin/laurie/CustomQosSettings
+f269bc44d3a6ed216cef9c804e93f0ef31893e85 refs/remotes/origin/laurie/FixUnityLoopback
+fce165aa00057936df589274e242c11f2b90488c refs/remotes/origin/laurie/NoMoreSourceDestinationDict
+e43d2fa0fde1f0f1f0f1b7798ef2bbab70a48003 refs/remotes/origin/laurie/OptimizePublisher
+6fedd90ad0e2452d83be99bbb4e40fa86364cd8d refs/remotes/origin/laurie/RedoRos2
+8a1e55fc7e22a23c80cb67280aa5157baaca3609 refs/remotes/origin/laurie/RemoveUnityInterfaces
+26adf3630191a7ad1134c3509b2b3a1cdd7940d4 refs/remotes/origin/laurie/Ros2SinglePackage
+37f2fca1e0939d02bdd5039d54653e75af8a7970 refs/remotes/origin/laurie/Ros2Update
+1e0d24265d6164d1dde9871b8120e2d15d5ac0ed refs/remotes/origin/laurie/ServiceResponseIsOneQueueItem
+13aa9c1557448831bc631c046a0e1cd5115caa96 refs/remotes/origin/laurie/SubscriberQueueSize
+70a08fb5e6e81347f083ed96183f0ae68feff60d refs/remotes/origin/laurie/SyncRos1ToRos2
+5954e37f0dfb918914bfb61dca63da5548035eef refs/remotes/origin/laurie/SyncRos1WithRos2
+993d366b8900bf9f3d2da444fde64c0379b4dc7c refs/remotes/origin/main
+54c1a64b6d5ef6ffa0a0431570bb74329b79b15b refs/remotes/origin/main-ros2
+45978458c3d91b7d785ff9794faf57d5e4f4ee2c refs/remotes/origin/merge/ready
+26cbd5a4b99b0e5233ca6aabde923e3d745a57c8 refs/remotes/origin/merge/resolve-conflicts
+1b9bf94bd5c3f19800f899d99d9a8c6222e365cc refs/remotes/origin/release-0.4.0
+f188add52088d51c27cf56b40c069392af170dc4 refs/remotes/origin/shuo/AIRO-747-publisher-test
+f43dc1a14d9238abc9a3fc1399850b835efcd7dd refs/remotes/origin/shuo/add-tests
+908043efc89f3d6bd452d6663acaa58246065f58 refs/remotes/origin/shuo/dev-backup-0.4.0
+3331ed5b73d213d8093b798b10762865cb479527 refs/remotes/origin/shuo/fix-unity-srv
+526b2aafdd483a22010131f6d7e337e91b4e5cf7 refs/remotes/origin/shuo/resolve-conflicts
+52e3e64d825be9b57588859d0d69918795d81e52 refs/remotes/origin/snyk-fix-92e9a89ace4183e61e5c6349c0ef297c
+043d1c6a1b56cccc51c566cf417f18fb82d0ab44 refs/remotes/origin/snyk-fix-ebb83767c9a075cf57e814e7b9d6bced
+79c601f247ca2f76a9b73fd529291b3b4c571e7c refs/tags/ROS2v0.5.0
+09d97b2c95018099e3d2a8d8f1e8b168c895cdc9 refs/tags/ROS2v0.6.0
+54c1a64b6d5ef6ffa0a0431570bb74329b79b15b refs/tags/ROS2v0.7.0
+29693d5081cc87772d765a02f1bd00d317f7a863 refs/tags/v0.0.1
+^34c498d14d471b4643e38c606cc4489ad3032027
+d8d93f06f7e95501eda29a3d62ab28522faabb14 refs/tags/v0.1.0
+d47afe1ac3e38406f22a1840553f970e7229519b refs/tags/v0.1.1
+^8a1dde63f655bfa3a1c892c6e15ccae64f6c53a6
+aee36db7ccbc03814fea325be04432cea2dc500e refs/tags/v0.1.2
+43857a49fa09fb32adbbd0248dd900262edf7f47 refs/tags/v0.2.0
+^c56f558687c2467f1e9782b58d12393c9bc47bc7
+a5e0fd1ce1a711f557fe67e73657c74f92482fbe refs/tags/v0.3.0
+18612dcb5f8ce662e691926930aa6469714d82aa refs/tags/v0.4.0
+f978d948c35e5c14542839b5f8c2e715c4b61a1d refs/tags/v0.5.0
+715a402ec09ce8095faabed915e3371638b4246a refs/tags/v0.6.0
+993d366b8900bf9f3d2da444fde64c0379b4dc7c refs/tags/v0.7.0

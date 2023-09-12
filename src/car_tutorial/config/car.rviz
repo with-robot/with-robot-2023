@@ -67,6 +67,8 @@ Visualization Manager:
           Value: true
         left_wheel:
           Value: true
+        odom:
+          Value: true
         right_wheel:
           Value: true
       Marker Scale: 1
@@ -86,6 +88,8 @@ Visualization Manager:
             {}
           right_wheel:
             {}
+        odom:
+          {}
       Update Interval: 0
       Value: true
     - Alpha: 1
