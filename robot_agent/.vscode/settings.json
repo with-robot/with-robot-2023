@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "xmemory": "cpp",
+    "memory": "cpp"
+  },
+  "C_Cpp.errorSquiggles": "disabled",
+  "C_Cpp_Runner.msvcBatchPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Auxiliary/Build/vcvarsall.bat"
+}

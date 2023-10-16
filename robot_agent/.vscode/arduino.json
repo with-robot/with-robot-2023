@@ -1,0 +1,8 @@
+{
+    "sketch": "main\\main.ino",
+    "configuration": "PartitionScheme=default,FlashMode=qio,FlashFreq=80,UploadSpeed=921600,DebugLevel=none,EraseFlash=none",
+    "board": "esp32:esp32:esp32wrover",
+    "port": "COM3",
+    "output": "../build",
+    "programmer": "esptool"
+}
