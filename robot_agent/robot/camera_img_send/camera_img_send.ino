@@ -162,7 +162,8 @@ camera_config_t get_camera_config()
     config.frame_size = FRAMESIZE_SVGA;
     config.jpeg_quality = 12;
     config.fb_count = 1;
-  }
+  }  
+  
   return config;
 }
 
@@ -188,11 +189,7 @@ uint8_t *get_camera_image()
   }
   else
   {
-    fr_start = esp_timer_get_time();
-    fr_ready = fr_start;
-    fr_face = fr_start;
-    fr_encode = fr_start;
-    fr_recognize = fr_start;
+    // fr_start = esp_timer_get_time();  
 
     if (fb->format != PIXFORMAT_JPEG)
     {
@@ -210,44 +207,6 @@ uint8_t *get_camera_image()
       _jpg_buf_len = fb->len;
       _jpg_buf = fb->buf;
     }
-
-    // dl_matrix3du_t *image_matrix = dl_matrix3du_alloc(1, fb->width, fb->height, 3);
-
-    // if (!image_matrix)
-    // {
-    //   Serial.println("dl_matrix3du_alloc failed");
-    //   res = ESP_FAIL;
-    // }
-    // else
-    // {
-    //   if (!fmt2rgb888(fb->buf, fb->len, fb->format, image_matrix->item))
-    //   {
-    //     Serial.println("fmt2rgb888 failed");
-    //     res = ESP_FAIL;
-    //   }
-    //   else
-    //   {
-    //     fr_ready = esp_timer_get_time();
-    //     if (fb->format != PIXFORMAT_JPEG)
-    //     {
-    //       if (!fmt2jpg(image_matrix->item, fb->width * fb->height * 3, fb->width, fb->height, PIXFORMAT_RGB888, 90, &_jpg_buf, &_jpg_buf_len))
-    //       {
-    //         Serial.println("fmt2jpg failed");
-    //         res = ESP_FAIL;
-    //       }
-    //       esp_camera_fb_return(fb);
-    //       fb = NULL;
-    //     }
-    //     else
-    //     {
-    //       _jpg_buf = fb->buf;
-    //       _jpg_buf_len = fb->len;
-    //     }
-    //     fr_encode = esp_timer_get_time();
-    //   }
-    //   dl_matrix3du_free(image_matrix);
-    // }
-    // }
   }
   if (res == ESP_FAIL)
   {
@@ -259,32 +218,17 @@ uint8_t *get_camera_image()
     esp_camera_fb_return(fb);
     fb = NULL;
   }
+  
   return _jpg_buf;
 }
 // 에러발생 시 점멸처리
 void error_loop()
 {
-  while (1)
+  int cnt=0;
+  while (cnt <3)
   {
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-    delay(3000);
+    delay(1000);
+    cnt++;
   }
 }
-
-// void timer_callback(rcl_timer_t *timer, int64_t last_call_time)
-// {
-//   RCLC_UNUSED(last_call_time);
-//   if (timer != NULL)
-//   {
-//     RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
-//     msg.data++;
-//   }
-// }
-
-// int main(int argc, char const *argv[])
-// {
-//   /* code */
-//   setup()
-
-//   return 0;
-// }

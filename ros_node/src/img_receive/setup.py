@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'car_camera'
+package_name = 'img_receive'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'capture = car_camera.img_subscriber:main',
+            'capture = img_receive.img_subscriber:main',
         ],
     },
 )

@@ -1,7 +1,7 @@
 {
-    "sketch": "main\\main.ino",
-    "configuration": "PartitionScheme=default,FlashMode=qio,FlashFreq=80,UploadSpeed=921600,DebugLevel=none,EraseFlash=none",
-    "board": "esp32:esp32:esp32wrover",
+    "sketch": "robot\\camera_img_send\\camera_img_send.ino",
+    "configuration": "CPUFreq=240,FlashMode=qio,PartitionScheme=huge_app,FlashFreq=80,DebugLevel=none,EraseFlash=none",
+    "board": "esp32:esp32:esp32cam",
     "port": "COM3",
     "output": "../build",
     "programmer": "esptool"

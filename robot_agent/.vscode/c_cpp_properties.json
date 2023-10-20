@@ -264,7 +264,7 @@
                 "ARDUINO_ARCH_ESP32",
                 "ARDUINO_BOARD=\"ESP32_DEV\"",
                 "ARDUINO_VARIANT=\"esp32\"",
-                "ARDUINO_PARTITION_default",
+                "ARDUINO_PARTITION_huge_app",
                 "ESP32",
                 "CORE_DEBUG_LEVEL=0",
                 "BOARD_HAS_PSRAM",
