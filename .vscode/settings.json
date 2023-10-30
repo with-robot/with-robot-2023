@@ -1,14 +1,4 @@
 {
-  "colcon.provideTasks": true,
-  "colcon.colconCwd": "${workspaceFolder}/ros_node/",
-  "colcon.globalSetup": [],
-  "colcon.installType": "symlinked",
-  "colcon.refreshOnConfigurationChanged": true,
-  "colcon.rosInstallPath.windows": "C:\\opt\\ros\\humble\\x64",
-  "colcon.workspaceSetup": [
-    "C:\\opt\\ros\\humble\\x64setup.bat",
-    "install/setup.bat"
-  ],
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
   "C_Cpp_Runner.debuggerPath": "gdb",
@@ -65,5 +55,8 @@
   "C_Cpp_Runner.useLeakSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
-  "C_Cpp_Runner.msvcSecureNoWarnings": false
+  "C_Cpp_Runner.msvcSecureNoWarnings": false,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },  
 }

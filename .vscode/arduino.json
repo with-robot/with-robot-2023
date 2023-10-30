@@ -1,0 +1,7 @@
+{
+    "configuration": "CPUFreq=240,FlashMode=qio,PartitionScheme=huge_app,FlashFreq=80,DebugLevel=info,EraseFlash=all",
+    "board": "esp32:esp32:esp32cam",
+    "programmer": "esptool",
+    "port": "COM9",
+    "sketch": "robot\\esp32_robot_arduino\\esp32_robot_arduino.ino"
+}

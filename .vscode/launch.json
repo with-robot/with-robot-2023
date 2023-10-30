@@ -7,8 +7,7 @@
       "request": "launch",
       "program": "${file}",
       "console": "integratedTerminal",
-      "justMyCode": true,
-      "cwd": "${workspaceFolder}/ros_node"
+      "justMyCode": true
     },
     {
       "name": "C/C++ Runner: Debug Session",
@@ -17,8 +16,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "d:/Projects_robot/workspace/robot/ros_node/src/img_receive",
-      "program": "d:/Projects_robot/workspace/robot/ros_node/src/img_receive/build/Release/outRelease",
+      "cwd": "d:/Projects_robot/workspace/robot2/robot/esp32_robot_arduino",
+      "program": "d:/Projects_robot/workspace/robot2/robot/esp32_robot_arduino/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
