@@ -153,19 +153,7 @@ void loop()
             if (data->size > 0) {
                 sendTCP(NOTI_CAM, 0, RES_OK, data->buf, data->size);                
             }
-            free(data);
-            
-            // camera_fb_t *fb = esp_camera_fb_get();
-            // if (fb) {
-            //     sendTCP(NOTI_CAM, 0, RES_OK, fb->buf, fb->len);
-                
-            //     esp_camera_fb_return(fb);
-            //     fb = NULL;
-            // } else {
-            //     Serial.println("Camera capture failed");
-            //     // Serial.print("send cam: ");
-            //     // Serial.println(fb->len);
-            // }
+            free(data);         
         }
 
         loop_delay(&count, 100);        
