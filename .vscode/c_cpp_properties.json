@@ -3,18 +3,24 @@
     "configurations": [
         {
             "name": "windows-gcc-x64",
-            "compilerPath": "gcc",
             "compilerArgs": [
                 ""
             ],
-            "intelliSenseMode": "windows-gcc-x64",
+            "intelliSenseMode": "${default}",
             "includePath": [
-                "${workspaceFolder}/**"
+                "d:/Projects_robot/workspace/robot2/**"
             ],
             "forcedInclude": [],
-            "cStandard": "${default}",
-            "cppStandard": "${default}",
-            "defines": []
+            "defines": [],
+            "compilerPathInCppPropertiesJson": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.37.32822/bin/Hostx64/x64/cl.exe",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "d:/Projects_robot/workspace/robot2/**",
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         },
         {
             "name": "Arduino",
@@ -591,6 +597,22 @@
                 "__ATOMIC_RELEASE=3",
                 "USBCON"
             ]
+        },
+        {
+            "name": "gcc",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "compilerPath": "cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "${default}"
         }
     ]
 }
