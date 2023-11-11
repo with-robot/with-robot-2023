@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="robot">
+
+    <material name="grey">
+        <color rgba="0.8 0.8 0.8 1"/>
+    </material>
+
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <material name="orange">
+        <color rgba="1 0.3 0.1 1"/>
+    </material>
+
+    <material name="blue">
+        <color rgba="0 0 1 1"/>
+    </material>
+
+    <!-- BASE -->
+    <link name="base_link">
+    </link>
+
+    <!-- BODY -->
+    <joint name="body_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="body"/>
+    </joint>
+
+    <link name="body">
+        <visual>
+            <origin xyz="0 0 0.1" rpy="0 0 0"/>
+            <geometry>
+                <box size="0.05 0.08 0.2"/>
+            </geometry>
+            <material name="grey" />
+        </visual>
+    </link>
+
+    <!-- JOINT 01 -->
+    <joint name="body_to_joint01" type="revolute">
+        <parent link="body"/>
+        <child link="joint01"/>
+        <origin xyz="0.05 0 0.15" rpy="0 0 0"/>
+        <axis rpy="0 0 0" xyz="1 0 0" />
+        <limit effort="0.1" lower="-3.14" upper="3.14" velocity="0.2"/>
+    </joint>
+
+    <link name="joint01">
+        <visual>
+            <geometry>
+                <cylinder radius="0.05" length="0.05"/>
+            </geometry>
+            <material name="blue"/>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+        </visual>
+    </link>
+
+    <joint name="joint01_to_link01" type="fixed">
+        <origin xyz="0 0 0.25" rpy="0 0 0"/>
+        <parent link="joint01"/>
+        <child link="link01"/>
+    </joint>
+
+    <link name="link01">
+        <visual>
+            <geometry>
+                <box size="0.05 0.08 0.5"/>
+            </geometry>
+            <material name="grey" />
+        </visual>
+    </link>
+
+    <!-- JOINT 02 -->
+    <joint name="link01_to_joint02" type="revolute">
+        <parent link="link01"/>
+        <child link="joint02"/>
+        <origin xyz="-0.05 0 0.2" rpy="0 0 0"/>
+        <axis rpy="0 0 0" xyz="1 0 0" />
+        <limit effort="0.1" lower="-3.14" upper="3.14" velocity="0.2"/>
+    </joint>
+
+    <link name="joint02">
+        <visual>
+            <geometry>
+                <cylinder radius="0.05" length="0.05"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <material name="blue"/>
+        </visual>
+    </link>
+
+    <joint name="joint02_to_link02" type="fixed">
+        <origin xyz="0 0 0.175" rpy="0 0 0"/>
+        <parent link="joint02"/>
+        <child link="link02"/>
+    </joint>
+
+    <link name="link02">
+        <visual>
+            <geometry>
+                <box size="0.05 0.08 0.35"/>
+            </geometry>
+            <material name="grey" />
+        </visual>
+    </link>
+
+    <!-- JOINT 03 -->
+    <joint name="link02_to_joint03" type="revolute">
+        <parent link="link02"/>
+        <child link="joint03"/>
+        <origin xyz="0.05 0 0.125" rpy="0 0 0"/>
+        <axis rpy="0 0 0" xyz="1 0 0" />
+        <limit effort="0.1" lower="-3.14" upper="3.14" velocity="0.2"/>
+    </joint>
+
+    <link name="joint03">
+        <visual>
+            <geometry>
+                <cylinder radius="0.05" length="0.05"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <material name="blue"/>
+        </visual>
+    </link>
+
+    <joint name="joint03_to_link03" type="fixed">
+        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+        <parent link="joint03"/>
+        <child link="link03"/>
+    </joint>
+
+    <link name="link03">
+        <visual>
+            <geometry>
+                <box size="0.05 0.08 0.2"/>
+            </geometry>
+            <material name="grey" />
+        </visual>
+    </link>
+
+    <!--EDGE -->
+    <joint name="link03_to_edge" type="fixed">
+        <origin xyz="0 0 0.1" rpy="0 0 0"/>
+        <parent link="link03"/>
+        <child link="edge"/>
+    </joint>
+
+    <link name="edge">
+        <visual>
+            <geometry>
+                <cylinder radius="0.05" length="0.05"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <material name="orange"/>
+        </visual>
+    </link>
+
+</robot>
