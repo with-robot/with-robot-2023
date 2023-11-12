@@ -21,6 +21,17 @@ UNK_CMD = 0xEE
 
 bridge = CvBridge()
 
+cmd_map = {
+    "quality": 0x01,
+    "flash": 0x02,
+    "flashoff": 0x03,
+    "framesize": 0x04,
+    "speed": 0x51,
+    "nostop": 0x52,
+    "direction": 0x53,
+    "noti_cam": 0x81,
+}
+
 
 class TCPClient:
     def __init__(self, host, port):
@@ -44,6 +55,8 @@ class TCPClient:
 class RobotProxy:
     host: str = "192.168.4.1"
     port: int = 10000
+    # TCP client instance
+    robot: any = None
 
     def __init__(self, logger: any):
         # state info
@@ -58,9 +71,6 @@ class RobotProxy:
         # 로봇연결
         self._connect()
 
-        # 센싱처리 개시
-        self._image_retrieving()
-
     def subscribe(self, subscriber: ImageSubscribeInf):
         self.subscribers.add(subscriber)
 
@@ -68,37 +78,69 @@ class RobotProxy:
         if subscirber in self.subscribers:
             self.subscribers.remove(subscirber)
 
-    def send_msg(self, cmd: str, data: any = None) -> str:
-        self.logger.info(f"cmd={cmd}")
-        self.set_cfg(cmd)
-        buf: bytearray = self._read_data()
-        for byte in buf:
-            self.logger.info(f"result={byte:02X}")
-        return buf
+    def send_msg(self, cmd: int, message: int) -> str:
+        if not cmd in cmd_map:
+            raise Exception("사용할 수 없는 명령코드 입력[{cmd}]")
+
+        self.logger.info(f"cmd={cmd}, map_cmd={cmd_map.get(cmd)}, data={message}")
+
+        response = "OK"
+        retry = 0
+        buf: bytearray = []
+        while retry < 10:
+            self._send_data(cmd_map.get(cmd), [message])
+
+            if self._read_data(interesting=CMD_CFG):
+                break
+
+            sleep(0.1)
+            # if retry > 5:
+
+            #     response = "FAIL"
+            #     break
+            self.logger.info(f"fail retry #{retry}")
+            retry += 1
+
+        self.logger.info(
+            f"count:{len(buf)}, send_msg return={','.join([format(x,'02X') for x in buf])}"
+        )
+
+        return response
 
     def _connect(self):
-        try:
-            self.robot = TCPClient(self.host, self.port)
+        self.logger.info(f"로봇연결을 시도합니다.....")
+        if self.robot:
+            raise Exception("로봇이 존재해요")
+            return
 
-        except Exception as e:
-            raise Exception("로봇연결에 실패했습니다", str(e))
+        retry = 1
+        while True:
+            try:
+                self.robot = TCPClient(self.host, self.port)
+                break
+            except Exception as e:
+                sleep(2)
+                self.logger.info(f"로봇연결을 다시 시도합니다.[{retry}]")
+                retry += 1
 
-    def _image_retrieving(self):
+    def req_capture(self):
         def task():
             while True:
                 for publisher in self.subscribers:
-                    rx_buf = self._read_data()
-                    if not rx_buf:
-                        sleep(1000)
-                        break
+                    self._send_data(cmd_map.get("noti_cam"), [00])
 
-                    image = cv2.imdecode(
-                        np.frombuffer(rx_buf, dtype=np.uint8), cv2.IMREAD_COLOR
-                    )
+                    rx_buf = self._read_data(interesting=NOTI_CAM)
+                    if rx_buf:
+                        image = cv2.imdecode(
+                            np.frombuffer(rx_buf[8:], dtype=np.uint8), cv2.IMREAD_COLOR
+                        )
 
-                    stream_image = bridge.cv2_to_imgmsg(image, encoding="bgr8")
+                        stream_image = bridge.cv2_to_imgmsg(image, encoding="bgr8")
 
-                    publisher.update(stream_image)
+                        publisher.update(stream_image)
+
+                # 간격조절
+                sleep(5)
 
                 # logging.debug(f"처리 완료....")
                 # cv2.imshow("robot vision", image)
@@ -111,24 +153,28 @@ class RobotProxy:
     def set_cfg(self, noti_imu):
         self._send_data(CMD_CFG, [1 if noti_imu else 0])
 
-    def _read_data(self) -> bytearray:
+    def _is_NOTI_CAM(self, buf: bytearray) -> bool:
+        return buf[1] == NOTI_CAM
+
+    def _read_data(self, interesting) -> bytearray:
         rx_buf = bytearray()
         rx_buf.extend(self.robot.read(8))
+        self.logger.info(f"_read_data={' '.join(format(x, '02x') for x in rx_buf)}")
+
         # 시작점 체크
-        if rx_buf[0] != 0xFF:
+        if rx_buf[0] != 0xFF or rx_buf[1] != interesting:
             return
 
         rx_len = int.from_bytes(rx_buf[4:8], byteorder="little")
         rx_buf.extend(self.robot.read(rx_len + 1))
 
+        # self.logger.info(f"_read_data2={' '.join(format(x, '02x') for x in rx_buf)}")
+
         # checksum 체크
         if sum(rx_buf[:-1]) & 0xFF != rx_buf[-1]:
             return
 
-        if rx_buf[1] != NOTI_CAM:
-            return
-
-        return rx_buf[8:-1]
+        return rx_buf[:-1]
 
     def _send_data(self, command, data):
         seq = next(self.seq) % 0xFE + 1
@@ -139,3 +185,5 @@ class RobotProxy:
         cmd.append(checksum)
 
         self.robot.write(cmd)
+
+        self.logger.info(f"_write_data={' '.join(format(x, '02x') for x in cmd)}")

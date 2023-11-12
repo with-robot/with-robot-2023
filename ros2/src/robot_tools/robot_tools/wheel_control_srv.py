@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 
-from typing import Any
 import rclpy
 from rclpy.node import Node
-
-# from std_msgs.msg import String
-# from geometry_msgs.msg import Twist
 from .tcp_client import RobotProxy
-from turtlesim.srv import TeleportAbsolute
+from inf.srv import WheelControlParams
 
 
 class WheelControlSrvNode(Node):
@@ -15,19 +11,24 @@ class WheelControlSrvNode(Node):
         super().__init__("wheel_control_srv")
 
         self.service = self.create_service(
-            srv_type=TeleportAbsolute, srv_name="/wheel_control", callback=self.response
+            srv_type=WheelControlParams,
+            srv_name="/wheel_control",
+            callback=self.response,
         )
 
         # 로봇 인스턴스 생성
         self.robot = RobotProxy(self.get_logger())
 
-    def response(
-        self, request: TeleportAbsolute.Request, response: TeleportAbsolute.Response
-    ):
-        print("request:", request)
-        print("response:", response)
-        r = self.robot.send_msg(request.x)
-        return r
+        self.get_logger().info("service server starts....")
+
+    def response(self, request, response) -> any:
+        cmd = request.cmd
+        val = request.val
+        self.get_logger().info(f"cmd={cmd}, val={val}")
+
+        response.result = self.robot.send_msg(cmd, val)
+        self.get_logger().info(f"service return = {response.result}")
+        return response
 
 
 def main(args=None):

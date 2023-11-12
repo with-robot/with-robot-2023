@@ -1,11 +1,8 @@
-#ifndef CameraControl2_H
-#define CameraControl2_H
-
 #define CAMERA_MODEL_AI_THINKER // Has PSRAM
 #include <string.h>
 #include "esp_camera.h"
 #include "camera_pins.h"
-#include "user_func.h"
+#include "camera_tool.h"
 
 esp_err_t initCamera()
 {
@@ -55,7 +52,7 @@ esp_err_t setUpCamera()
     return ESP_OK;
 }
 
-Image_st* capture_image_() {
+Image_st* capture_image() {
   Image_st *data = (Image_st*)malloc(sizeof(Image_st));
   camera_fb_t *fb = esp_camera_fb_get();
   if (fb) {
@@ -68,6 +65,3 @@ Image_st* capture_image_() {
 
   return data;
 }
-
-
-#endif

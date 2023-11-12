@@ -65,5 +65,10 @@
     "string": "cpp",
     "string_view": "cpp"
   },
-  "C_Cpp.default.compilerPath": "cl.exe"
+  "C_Cpp.default.compilerPath": "cl.exe",
+  "colcon.provideTasks": true,
+  "colcon.installType": "merged",
+  "colcon.outputLevel": "warning",
+  "colcon.refreshOnConfigurationChanged": true,
+  "colcon.rosInstallPath.windows": "C:\\opt\\ros\\humble\\x64"
 }

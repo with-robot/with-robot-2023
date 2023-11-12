@@ -1,0 +1,5 @@
+string cmd
+int8 val
+float64 theta
+---
+string result

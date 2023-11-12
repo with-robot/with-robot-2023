@@ -10,12 +10,23 @@ def generate_launch_description():
         executable="camera",
         output="screen",
     )
-
+    robot_wheel = Node(
+        package="robot_tools",
+        executable="wheel",
+        output="screen",
+    )
     # 로봇 카메라이미지 구독
-    client_service = Node(
+    camera_service = Node(
         package="client_nodes",
         executable="camera",
         output="screen",
     )
 
-    return LaunchDescription([robot_camera, client_service])
+    # 서비스
+    wheel_service = Node(
+        package="client_nodes",
+        executable="wheel",
+        output="screen",
+    )
+
+    return LaunchDescription([robot_camera, robot_wheel, camera_service, wheel_service])

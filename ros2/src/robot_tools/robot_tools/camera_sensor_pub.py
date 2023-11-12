@@ -36,11 +36,12 @@ class CmrImageSendPubNode(Node):
         )  # 10: quesize
 
         # 로봇 인스턴스 생성
-        self.robot = RobotProxy()
+        self.robot = RobotProxy(self.get_logger())
 
     def subscribe(self):
         # 구독자로 등록한다.
         self.robot.subscribe(self)
+        self.robot.req_capture()
 
     def desubscribe(self, s):
         # 구독을 중지한다.
