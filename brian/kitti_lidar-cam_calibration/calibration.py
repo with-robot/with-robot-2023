@@ -44,4 +44,24 @@ plt.show()
 
 plt.imshow(img); plt.show()
 
+# %% Filter out points that are behind the camera (s < 0)
+n_data = pcd.shape[0]
+pcd_3d = np.hstack((pcd[:, :3], np.ones((n_data, 1))))
+
+xy1 = np.matmul(P2, np.vstack((np.matmul(R0_rect, np.matmul(Tr_velo_to_cam, pcd_3d.T)), np.ones((1, n_data))))).T
+s = xy1[:, 2]
+x = xy1[:, 0] / s
+y = xy1[:, 1] / s
+k = s > 0
+
+plt.scatter(x[k], y[k], s=1, c=pcd[k, 3], cmap='gray')
+x_lim = img.shape[1]
+y_lim = img.shape[0]
+plt.axis('equal')
+plt.xlim(0, x_lim)
+plt.ylim(y_lim, 0)
+plt.show()
+
+plt.imshow(img); plt.show()
+
 # %%
