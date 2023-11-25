@@ -42,14 +42,14 @@ class CarmeraImgSubscribeNode(Node):
                 f'[image_handler] camera_image_shape: {str(rows)+":"+str(cols)+":"+str(channels)}'
             )
 
-            cv2.imshow("Camera Image", image)
-            cv2.waitKey(3)
+            # cv2.imshow("Camera Image", image)
+            # cv2.waitKey(1)
 
             sn = next(self.seq)
             filename = f"camera_{sn:03d}.jpg"
             self.get_logger().info(f"파일명: {filename}")
 
-            # cv2.imwrite(filename, image)
+            cv2.imwrite(filename, image)
 
         except CvBridgeError as e:
             self.get_logger().info(e)

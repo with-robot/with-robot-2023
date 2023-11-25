@@ -9,7 +9,7 @@ enum CommandCode
   __framesize,
   __speed=0x51,
   __nostop,
-  __direction
+  __direction  
 };
 
 typedef struct
@@ -23,5 +23,8 @@ typedef struct
 } CmdReq_st;
 
 esp_err_t cmd_handler(CommandCode cmd, unsigned int value);
+
+void robot_setup();
+void robot_stop();
 
 #endif

@@ -23,6 +23,7 @@ setup(
             "camera = robot_tools.camera_sensor_pub:main",
             "imu = robot_tools.imu_sesnor_pub:main",
             "wheel = robot_tools.wheel_control_srv:main",
+            "starter = robot_tools.robot_starter:main",
         ],
     },
 )

@@ -63,7 +63,8 @@
     "cmath": "cpp",
     "array": "cpp",
     "string": "cpp",
-    "string_view": "cpp"
+    "string_view": "cpp",
+    "cstdint": "cpp"
   },
   "C_Cpp.default.compilerPath": "cl.exe",
   "colcon.provideTasks": true,

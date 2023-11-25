@@ -7,12 +7,10 @@
   DroneBot Workshop 2021
   https://dronebotworkshop.com
 */
-
-// #include <esp32-hal-ledc.h>
 #include "esp_timer.h"
 #include "esp_camera.h"
 #include "Arduino.h"
-#include "robot_control.h"
+#include "control.h"
 
 // TB6612FNG H-Bridge Connections (both PWM inputs driven by GPIO 12)
 #define MTR_PWM 12
@@ -30,9 +28,9 @@ const int freq = 2000;
 const int motorPWMChannnel = 8;
 const int lresolution = 8;
 
-volatile unsigned int motor_speed = 200;
-volatile unsigned long previous_time = 0;
-volatile unsigned long move_interval = 250;
+volatile unsigned int motor_speed = 130;
+volatile unsigned long move_interval = 5000;
+uint8_t robo = 0;
 
 // Placeholder for functions
 void robot_setup();
@@ -42,7 +40,7 @@ void robot_back();
 void robot_left();
 void robot_right();
 unsigned int map_range_255(unsigned int val);
-uint8_t robo = 0;
+
 
 enum ststate
 {
@@ -56,9 +54,9 @@ esp_err_t cmd_handler(CommandCode code, unsigned int value)
 {  
   int val = map_range_255(value);
   int res = 0;
-  previous_time = millis(); //요청받은 시간을 기준으로 한다.
 
-  robot_setup();
+  Serial.printf("commandCode=%d, value=%d\n", code, value);
+  // previous_time = millis(); //요청받은 시간을 기준으로 한다.
 
   // Look at values within URL to determine function
   // if (!strcmp(variable, "framesize"))
@@ -85,7 +83,7 @@ esp_err_t cmd_handler(CommandCode code, unsigned int value)
   {
     ledcWrite(7, val);
   }
-  else if (code == speed)
+  else if (code == __speed)
   {
     ledcWrite(motorPWMChannnel, val); // #8
   }
@@ -98,32 +96,32 @@ esp_err_t cmd_handler(CommandCode code, unsigned int value)
     if (value == 1)
     {
       Serial.println("Forward");
-      robot_fwd();
-      
       robo = 1;
+      robot_fwd();
     }
     else if (value == 2)
     {
       Serial.println("TurnLeft");
-      robot_left();
       robo = 1;
+      robot_left();      
     }
     else if (value == 3)
     {
       Serial.println("Stop");
+      robo = 0;
       robot_stop();
     }
     else if (value == 4)
     {
       Serial.println("TurnRight");
-      robot_right();
       robo = 1;
+      robot_right();      
     }
     else if (value == 5)
     {
       Serial.println("Backward");
-      robot_back();
       robo = 1;
+      robot_back();      
     }
     if (noStop != 1)
     {
@@ -159,9 +157,11 @@ void robot_setup()
   robot_stop();
 
   // Motor uses PWM Channel 8
-  ledcAttachPin(MTR_PWM, 8);
-  ledcSetup(8, 2000, 8);
-  ledcWrite(8, 130);
+  ledcAttachPin(MTR_PWM, motorPWMChannnel); //ESP채널8을 PWM(LED제어)핀에 연결한다.
+  ledcSetup(motorPWMChannnel, 2000, 8); //ESP채널번호, PWM신호의 주파수, 듀티사이클 해상도(8비트;0~255)
+  ledcWrite(motorPWMChannnel, motor_speed); //ESP채널번호, 듀티사이클 크기(클수록 속도가 빨라진다)
+
+  Serial.println("robot wheels setup completed.");
 }
 
 void robot_stop()
@@ -178,11 +178,6 @@ void robot_fwd()
   digitalWrite(LEFT_M1, LOW);
   digitalWrite(RIGHT_M0, HIGH);
   digitalWrite(RIGHT_M1, LOW);
-  
-  if(previous_time - millis() > move_interval) {
-    robot_stop();
-  }
-  previous_time = millis();
 }
 
 void robot_back()
@@ -191,8 +186,6 @@ void robot_back()
   digitalWrite(LEFT_M1, HIGH);
   digitalWrite(RIGHT_M0, LOW);
   digitalWrite(RIGHT_M1, HIGH);
-  move_interval = 250;
-  previous_time = millis();
 }
 
 void robot_right()
@@ -201,8 +194,6 @@ void robot_right()
   digitalWrite(LEFT_M1, LOW);
   digitalWrite(RIGHT_M0, LOW);
   digitalWrite(RIGHT_M1, HIGH);
-  move_interval = 100;
-  previous_time = millis();
 }
 
 void robot_left()
@@ -211,6 +202,4 @@ void robot_left()
   digitalWrite(LEFT_M1, HIGH);
   digitalWrite(RIGHT_M0, HIGH);
   digitalWrite(RIGHT_M1, LOW);
-  move_interval = 100;
-  previous_time = millis();
 }

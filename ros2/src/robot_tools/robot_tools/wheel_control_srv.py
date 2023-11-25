@@ -19,7 +19,7 @@ class WheelControlSrvNode(Node):
         # 로봇 인스턴스 생성
         self.robot = RobotProxy(self.get_logger())
 
-        self.get_logger().info("service server starts....")
+        self.get_logger().info(f"service server[{self.robot}] starts....")
 
     def response(self, request, response) -> any:
         cmd = request.cmd

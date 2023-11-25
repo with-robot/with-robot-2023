@@ -16,8 +16,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "d:/Projects_robot/workspace/robot2/robot/robot_main",
-      "program": "d:/Projects_robot/workspace/robot2/robot/robot_main/build/Debug/outDebug",
+      "cwd": "d:/Projects_robot/workspace/robot2/robot",
+      "program": "d:/Projects_robot/workspace/robot2/robot/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

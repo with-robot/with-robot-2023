@@ -38,6 +38,8 @@ class CmrImageSendPubNode(Node):
         # 로봇 인스턴스 생성
         self.robot = RobotProxy(self.get_logger())
 
+        self.get_logger().info(f"camera pub[{self.robot}] starts....")
+
     def subscribe(self):
         # 구독자로 등록한다.
         self.robot.subscribe(self)

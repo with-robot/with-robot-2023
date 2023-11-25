@@ -10,7 +10,7 @@ typedef struct {
   size_t size;
 } Image_st;
 
-esp_err_t setUpCamera();
-Image_st* capture_image();
+esp_err_t setUp_camera();
+esp_err_t capture_image(Image_st *data);
 
 #endif
