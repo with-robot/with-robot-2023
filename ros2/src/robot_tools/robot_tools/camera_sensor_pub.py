@@ -36,42 +36,48 @@ class CmrImageSendPubNode(Node):
         )  # 10: quesize
 
         # 로봇 인스턴스 생성
-        self.robot = RobotProxy(self.get_logger())
+        self.connect_robot()
+
+        self.create_timer(1, self.publish_camera_img)
 
         self.get_logger().info(f"camera pub[{self.robot}] starts....")
 
-    def subscribe(self):
-        # 구독자로 등록한다.
-        self.robot.subscribe(self)
-        self.robot.req_capture()
+    def health_checking(self):
+        if not self.robot.is_alive():
+            self.timer.cancel()
+            self.robot.disconnect()
+            self.get_logger().info(f"reconnecting the robot...")
+            self.connect_robot()
 
-    def desubscribe(self, s):
-        # 구독을 중지한다.
-        self.robot.desubscribe(s)
+    def connect_robot(self):
+        self.robot = RobotProxy(self.get_logger())
+        # 3초마다 체크
+        self.timer = self.create_timer(3, self.health_checking)
 
-    def update(self, data: Image):
-        self.get_logger().info(f"recv encoding: {data.encoding}")
-        try:
-            image = bridge.imgmsg_to_cv2(data, "bgr8")
+    def publish_camera_img(self):
+        data: Image = self.robot.capture_image()
+        if data:
+            self.get_logger().info(f"recv encoding: {data.encoding}")
 
-            (rows, cols, channels) = image.shape
-            self.get_logger().info(
-                f'shape: {str(rows)+":"+str(cols)+":"+str(channels)}'
-            )
-            # cv2.imshow("Sending Image", image)
-            # cv2.waitKey(3)
+            try:
+                image = bridge.imgmsg_to_cv2(data, "bgr8")  # "bgr8"
 
-            self.publisher.publish(data)
+                (rows, cols, channels) = image.shape
+                self.get_logger().info(
+                    f'수신이미지: {str(rows)+":"+str(cols)+":"+str(channels)}'
+                )
+                # cv2.imshow("Sending Image", image)
+                # cv2.waitKey(3)
+                self.publisher.publish(data)
 
-        except CvBridgeError as e:
-            self.get_logger().info(e)
+            except CvBridgeError as e:
+                self.get_logger().info(e)
 
 
 def main(args=None):
     rclpy.init(args=args)
 
     pub_node = CmrImageSendPubNode()
-    pub_node.subscribe()
 
     rclpy.spin(pub_node)  # blocked until ros2 shutdown
 

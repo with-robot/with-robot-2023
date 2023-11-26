@@ -41,6 +41,14 @@ cmd_map = {
 
 
 class TCPClient:
+    # client_socket = None
+
+    # def __new__(cls, host, port):
+    #     if not cls.client_socket:
+    #         cls.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #         cls.client_socket.connect((host, port))
+    #     return super().__new__(cls)
+
     def __init__(self, host, port):
         # init socket
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,7 +75,7 @@ class TCPClient:
     def disconnect(self):
         if self.client_socket:
             self.client_socket.close()
-            self.lock = None
+            # self.lock = None
 
 
 class RobotProxy:
@@ -76,6 +84,7 @@ class RobotProxy:
     # TCP client instance
     robot: any = None
     logger: any = None
+    alive: bool = False
 
     def __new__(cls, logger: any = None):
         if not cls.logger:
@@ -87,13 +96,14 @@ class RobotProxy:
     @classmethod
     def _connect(cls, logger):
         logger.info(f"로봇연결을 시도합니다.....{cls.robot}")
-        if cls.robot:
-            cls.robot.disconnect()
+        if RobotProxy.alive and cls.robot:
+            return
 
         retry = 1
         while True:
             try:
                 cls.robot = TCPClient(cls.host, cls.port)
+                cls.alive = True
                 break
             except Exception as e:
                 time.sleep(2)
@@ -116,14 +126,16 @@ class RobotProxy:
     def disconnect(self):
         self.robot.disconnect()
 
-    def alive(self):
+    def is_alive(self):
         try:
             payload = [0xFF, 0, 0, H_CHECK, 0, 0, 0, 0, 0x01]
             self.robot.write(payload)
-            self.logger.info("health check OK")
-            return True
+            # self.logger.info("health check OK")
+            RobotProxy.alive = True
         except Exception:
-            return False
+            RobotProxy.alive = False
+
+        return RobotProxy.alive
 
     def send_msg(self, cmd: int, message: int) -> str:
         self.logger.info(
@@ -157,9 +169,9 @@ class RobotProxy:
             np.frombuffer(rx_buf[8:-1], dtype=np.uint8), cv2.IMREAD_COLOR
         )
 
-        stream_image = bridge.cv2_to_imgmsg(image, encoding="bgr8")
+        imgmsg = bridge.cv2_to_imgmsg(image, encoding="bgr8")
 
-        return stream_image
+        return imgmsg
 
         # 간격조절
         # time.sleep(3)

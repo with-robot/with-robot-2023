@@ -53,7 +53,7 @@ class WheelCameraNode(Node):
         self.get_logger().info(f"service server[{self.robot}] starts....")
 
     def health_checking(self):
-        if not self.robot.alive():
+        if not self.robot.is_alive():
             self.timer.cancel()
             self.robot.disconnect()
             self.get_logger().info(f"reconnecting the robot...")

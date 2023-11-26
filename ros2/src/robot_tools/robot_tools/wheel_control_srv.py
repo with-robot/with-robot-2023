@@ -17,9 +17,21 @@ class WheelControlSrvNode(Node):
         )
 
         # 로봇 인스턴스 생성
-        self.robot = RobotProxy(self.get_logger())
+        self.connect_robot()
 
         self.get_logger().info(f"service server[{self.robot}] starts....")
+
+    def connect_robot(self):
+        self.robot = RobotProxy(self.get_logger())
+        # 3초마다 체크
+        self.timer = self.create_timer(3, self.health_checking)
+
+    def health_checking(self):
+        if not self.robot.is_alive():
+            self.timer.cancel()
+            self.robot.disconnect()
+            self.get_logger().info(f"reconnecting the robot...")
+            self.connect_robot()
 
     def response(self, request, response) -> any:
         cmd = request.cmd

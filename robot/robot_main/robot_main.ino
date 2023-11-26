@@ -36,15 +36,18 @@ byte RES_OK = 0x01;
 byte RES_NK = 0x02;
 byte UNK_CMD = 0xEE;
 
+#define MAX_CLIENTS 3
+
 WiFiServer tcpServer(10000);
+WiFiClient *clients[MAX_CLIENTS] = {NULL};
 WiFiClient tcpClient;
 esp_err_t result;
 
 extern void robot_stop();
 extern void robot_setup();
 extern uint8_t robo;
-extern volatile unsigned long move_interval; 
-extern volatile unsigned int  motor_speed;
+extern volatile unsigned long move_interval;
+extern volatile unsigned int motor_speed;
 unsigned long previous_time;
 
 byte _buf[256] = {
@@ -128,16 +131,20 @@ void setup()
     delay(1000);
     digitalWrite(LED_PIN, LOW);
     Serial.println("setup completed......");
-    
+
     // 정지처리 등록
     // esp_timer_create(&timerArgs, &timer);
 
-    data = (Image_st*)malloc(sizeof(Image_st));
+    data = (Image_st *)malloc(sizeof(Image_st));
     cmd_req_s = (CmdReq_st *)(malloc(sizeof(CmdReq_st)));
 
     ledcSetup(7, 5000, 8);
-    ledcAttachPin(4, 7);  //pin4 is LED
+    ledcAttachPin(4, 7); // pin4 is LED
     robot_setup();
+    for (int i = 0; i < MAX_CLIENTS; i++)
+    {
+        clients[i] = new WiFiClient();
+    }
 }
 
 void timerCallback(void *arg)
@@ -148,6 +155,7 @@ void timerCallback(void *arg)
 
 void loop()
 {
+    WiFiClient client_;
     // 주기적으로 바퀴를 정지시키다.
     // esp_timer_start_periodic(timer, 250000);
     if (robo)
@@ -155,48 +163,61 @@ void loop()
         unsigned long currentMillis = millis();
         if (currentMillis - previous_time >= move_interval)
         {
-            Serial.printf("로봇을 정지시켰습니다. %u - %u > %u\n", currentMillis, previous_time, move_interval);            
+            Serial.printf("로봇을 정지시켰습니다. %u - %u > %u\n", currentMillis, previous_time, move_interval);
             robot_stop();
-            char rsp[32];
-            sprintf(rsp, "SPPED: %d", motor_speed);
+            // char rsp[32];
+            // sprintf(rsp, "SPPED: %d", motor_speed);
             Serial.println("Stop");
             // byte *rsp_ = (byte *)malloc(sizeof(byte) * 255)
             // mcmcpy(rsp_, rsp, 32);
-            // sendTCP(CMD_CFG, 0, result, rsp, 32);            
+            // sendTCP(CMD_CFG, 0, result, rsp, 32);
         }
     }
 
     if (tcpServer.hasClient())
     {
-        if (!tcpClient || !tcpClient.connected())
+        // if (!tcpClient || !tcpClient.connected())
+        // {
+        WiFiClient newClient = tcpServer.available();
+        for (int i = 0; i < MAX_CLIENTS; ++i)
         {
-            tcpClient = tcpServer.available();
-            Serial.println("accept new Connection ...");
+            if (!clients[i]->connected())
+            {
+                clients[i] = new WiFiClient(newClient);
+                break;
+            }
         }
-        else
+        Serial.println("accept new Connection ...");
+    }
+
+    // 클라이언트가 사용 중이고 데이터를 가지고 있는 경우 해당 클라이언트를 선택합니다.
+    for (int i = 0; i < MAX_CLIENTS; ++i)
+    {
+        // if (NULL !=clients[i])
+        // {
+        //     continue;
+        // }
+        if (!clients[i]->connected())
         {
-            tcpClient.stop();
-            WiFiClient tcpclient = tcpServer.available();
-            // temp.stop();
-            // Serial.println("reject new Connection ...");
-            Serial.println("allow another Connection ...");
+            continue;
+        }
+        if (clients[i]->available())
+        {
+            client_ = *clients[i];
+            Serial.printf("found tcpClient at %d\n", i);
+            break;
         }
     }
 
-    if (!tcpClient || !tcpClient.connected() || !tcpClient.available())
+    // 클라이언트가 없거나 연결이 끊어졌거나 데이터를 가지고 있지 않으면 함수를 종료합니다.
+    // if (!tcpClient || !tcpClient.connected() || !tcpClient.available())
+    if (!client_.available())
     {
         return;
     }
-
     
+    tcpClient = client_;
     Serial.println("tcpClient.available.....");
-
-    // cmd_req_s = (CmdReq_st *)(malloc(sizeof(CmdReq_st)));
-    // if (cmd_req_s == nullptr)
-    // {
-    //     Serial.printf("수신버퍼 할당 중 오류");
-    //     return;
-    // };
 
     result = readTCP(cmd_req_s);
     if (result != ESP_OK)
@@ -219,31 +240,34 @@ void loop()
     }
 
     if (cmd_req_s->buf[1] == 0x53)
-    {                
+    {
         previous_time = millis();
         // 로봇제어 호출
         result = cmd_handler(cmd_req_s->cmd, cmd_req_s->val);
-        if (result != ESP_OK)
+        if (result == ESP_OK)
+        {
+            sendTCP(CMD_CFG, 0, RES_OK, NULL, 0);
+        }
+        else
         {
             Serial.printf("CMD Handler err %x\n", result);
+            sendTCP(CMD_CFG, 0, RES_NK, NULL, 0);
         }
-        sendTCP(CMD_CFG, 0, result, nullptr, 0);        
     }
     else if (cmd_req_s->buf[1] == 0x81)
     {
-        // 사진 전송        
-        esp_err_t result = capture_image(data);
+        // 사진 전송
+        result = capture_image(data);
         if (result == ESP_OK)
         {
             sendTCP(NOTI_CAM, 0, RES_OK, data->buf, data->size);
             free(data->buf);
-        } else {
+        }
+        else
+        {
             sendTCP(NOTI_CAM, 0, RES_NK, NULL, 0);
         }
-        // data->buf=NULL;        
     }
-
-    // free(cmd_req_s);
 }
 
 esp_err_t readTCP(CmdReq_st *cmd_req_s)
