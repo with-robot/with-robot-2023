@@ -1,6 +1,33 @@
 {
   "version": "0.2.0",
-  "configurations": [
+  "configurations": [    
+
+    {
+      "name": "mingw debugger",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${fileDirname}\\${fileBasenameNoExtension}.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": true, //printf결과출력
+      "MIMode": "gdb",
+      "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe",
+      "setupCommands": [
+          {
+              "description": "gdb에 자동 서식 지정 사용",
+              "text": "-enable-pretty-printing",
+              "ignoreFailures": true
+          },
+          {
+              "description": "Set Disassembly Flavor to Intel",
+              "text": "-gdb-set disassembly-flavor intel",
+              "ignoreFailures": true
+          }
+      ],
+      "preLaunchTask": "g++.exe build active file"
+    },
     {
       "name": "Python: Current File",
       "type": "python",
@@ -8,25 +35,6 @@
       "program": "${file}",
       "console": "integratedTerminal",
       "justMyCode": true
-    },
-    {
-      "name": "C/C++ Runner: Debug Session",
-      "type": "cppdbg",
-      "request": "launch",
-      "args": [],
-      "stopAtEntry": false,
-      "externalConsole": true,
-      "cwd": "d:/Projects_robot/workspace/robot2/robot/robot_main",
-      "program": "d:/Projects_robot/workspace/robot2/robot/robot_main/build/Debug/outDebug",
-      "MIMode": "gdb",
-      "miDebuggerPath": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
     }
   ]
 }

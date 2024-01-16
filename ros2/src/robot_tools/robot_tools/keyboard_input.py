@@ -31,6 +31,8 @@ class KeyboardControl(Node):
                 msg.data = "right"
                 self.publisher.publish(msg)
 
+            self.get_logger().info(f"key={msg.data}")
+
 
 def main(args=None):
     rclpy.init(args=args)

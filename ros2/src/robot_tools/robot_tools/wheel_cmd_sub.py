@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-import time
 import rclpy
 from rclpy.node import Node
 from .tcp_client import RobotProxy
-from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 from rclpy.qos import (
     QoSProfile,
@@ -13,45 +11,20 @@ from rclpy.qos import (
     QoSLivelinessPolicy,
     QoSReliabilityPolicy,
 )
-from .tcp_client import RobotProxy, bridge, cv2, CvBridgeError
-import threading
-from inf.srv import WheelControlParams
+import time
 
 
-class WheelCameraNode(Node):
-    robot_rebooting = False
-
+class WheelCmdSubNode(Node):
     def __init__(self):
-        super().__init__("tcp_agent_node")
+        super().__init__("wheel_cmd_sub")
+        self.is_reboot = False
 
         # 로봇 인스턴스 생성
         self.connect_robot()
-
-        # 이미지센서 발행자 생성
-        self.publisher = self.get_publisher()
-
-        # 키보드입력 구독자 생성
+        # 구독자 생성
         self.subscriber = self.get_subscription()
 
-    def start_publish(self):
-        _t = threading.Thread(target=self._publish_image_raw, args=(3,), daemon=True)
-        _t.start()
-
-        self.get_logger().info(f"service server[{self.robot}] starts....")
-
-    def get_publisher(self):
-        qos_profile = QoSProfile(
-            history=QoSHistoryPolicy.KEEP_LAST,
-            depth=10,
-            reliability=QoSReliabilityPolicy.BEST_EFFORT,
-            liveliness=QoSLivelinessPolicy.AUTOMATIC,
-        )
-
-        return self.create_publisher(
-            Image,
-            "/image_raw",
-            qos_profile=qos_profile,
-        )  # 10: quesize
+        self.get_logger().info(f"cmd subscription[{self.robot}] starts....")
 
     def get_subscription(self):
         qos_profile = QoSProfile(
@@ -62,6 +35,11 @@ class WheelCameraNode(Node):
         )
         return self.create_subscription(Twist, "/cmd_vel", self._handler, qos_profile)
 
+    def connect_robot(self):
+        self.robot = RobotProxy(self.get_logger())
+        # 3초마다 체크
+        self.timer = self.create_timer(3, self.health_checking)
+
     def health_checking(self):
         if not self.robot.is_alive():
             self.timer.cancel()
@@ -69,23 +47,17 @@ class WheelCameraNode(Node):
             self.get_logger().info(f"reconnecting the robot...")
             self.connect_robot()
 
-    def connect_robot(self):
-        self.robot_rebooting = True
-        self.robot = RobotProxy(self.get_logger())
-        self.robot_rebooting = False
-        # 3초마다 체크
-        self.timer = self.create_timer(15, self.health_checking)
-
     def _handler(self, data: Twist) -> any:
-        if self.robot_rebooting:
+        if self.is_reboot:
             time.sleep(0.1)
             return
         # 8bit -
         x = data.linear.x
-        # y = data.linear.y
-        # z = data.linear.z
-        # ax = data.angular.x
-        # ay = data.angular.y
+        y = data.linear.y
+        z = data.linear.z
+
+        ax = data.angular.x
+        ay = data.angular.y
         az = data.angular.z
         # key_map = {arrow_up: 1, arrow_down: 5, arrow_left: 2, arrow_right: 4, stop: 3}
         # 전진, x=0.5, 후진, x=-05, 좌회전: az=0.8, 우회전: az=0.8
@@ -93,7 +65,11 @@ class WheelCameraNode(Node):
 
         result = self.robot.send_msg("direction", self.cal_val(x, az))
         if not result:
+            self.is_reboot = True
+            # self.subscriber.destroy()
             self.connect_robot()
+            # self.subscriber = self.get_subscription()
+            self.is_reboot = False
 
     def cal_val(self, x: float, Z: float) -> bytes:
         # cmd #83  val: - 4비트X 0~15:4비트Z ; 중심 7
@@ -125,46 +101,19 @@ class WheelCameraNode(Node):
             2,
         )
 
-    def _publish_image_raw(self, sleep_: int = 1):
-        self.get_logger().info(f"publish_camera_img: {sleep_}")
-
-        while True:
-            if self.robot_rebooting:
-                time.sleep(1)
-                continue
-
-            data: Image = self.robot.capture_image()
-            if data:
-                self.get_logger().info(f"recv encoding: {data.encoding}")
-
-                try:
-                    # image = bridge.imgmsg_to_cv2(data, "bgr8")  # "bgr8"
-
-                    # (rows, cols, channels) = image.shape
-                    # self.get_logger().info(
-                    #     f'shape: {str(rows)+":"+str(cols)+":"+str(channels)}'
-                    # )
-                    # cv2.imshow("Sending Image", image)
-                    # cv2.waitKey(3)
-                    self.publisher.publish(data)
-
-                except CvBridgeError as e:
-                    self.get_logger().info(e)
-
-            time.sleep(sleep_)
+    # .to_bytes(1, byteorder="little")
 
 
 def main(args=None):
     rclpy.init(args=args)
 
-    wheel_camera = WheelCameraNode()
-    wheel_camera.start_publish()
+    server_node = WheelCmdSubNode()
+    rclpy.spin(server_node)  # blocked until ros2 shutdown
 
-    rclpy.spin(wheel_camera)  # blocked until ros2 shutdown
-
-    wheel_camera.destroy_node()
+    server_node.destroy_node()
     rclpy.shutdown()
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    server_node = WheelCmdSubNode()

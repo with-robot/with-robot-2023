@@ -5,8 +5,8 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 // #include <esp32-hal-ledc.h>
-#include "get_image.h"
-#include "control.h"
+#include "camera_image.h"
+#include "wheel_control.h"
 
 #define __WIFI_CLIENT__1
 #ifdef __WIFI_CLIENT__
@@ -36,15 +36,13 @@ byte RES_OK = 0x01;
 byte RES_NK = 0x02;
 byte UNK_CMD = 0xEE;
 
-#define MAX_CLIENTS 3
+#define MAX_CLIENTS 50
 
 WiFiServer tcpServer(10000);
 WiFiClient *clients[MAX_CLIENTS] = {NULL};
 WiFiClient tcpClient;
 esp_err_t result;
 
-extern void robot_stop();
-extern void robot_setup();
 extern uint8_t robo;
 extern volatile unsigned long move_interval;
 extern volatile unsigned int motor_speed;
@@ -125,10 +123,11 @@ void setup()
         return;
     }
     // 전면 LED를 점등한다.
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, HIGH);
 
-    delay(1000);
+    // digitalWrite(LED_PIN, HIGH);
+    pinMode(LED_PIN, OUTPUT);
+
+    // delay(1000);
     digitalWrite(LED_PIN, LOW);
     Serial.println("setup completed......");
 
@@ -138,9 +137,9 @@ void setup()
     data = (Image_st *)malloc(sizeof(Image_st));
     cmd_req_s = (CmdReq_st *)(malloc(sizeof(CmdReq_st)));
 
-    ledcSetup(7, 5000, 8);
-    ledcAttachPin(4, 7); // pin4 is LED
+    // 휠 초기화
     robot_setup();
+
     for (int i = 0; i < MAX_CLIENTS; i++)
     {
         clients[i] = new WiFiClient();
@@ -168,6 +167,7 @@ void loop()
             // char rsp[32];
             // sprintf(rsp, "SPPED: %d", motor_speed);
             Serial.println("Stop");
+            robo = 0;
             // byte *rsp_ = (byte *)malloc(sizeof(byte) * 255)
             // mcmcpy(rsp_, rsp, 32);
             // sendTCP(CMD_CFG, 0, result, rsp, 32);
@@ -215,7 +215,7 @@ void loop()
     {
         return;
     }
-    
+
     tcpClient = client_;
     Serial.println("tcpClient.available.....");
 
@@ -304,6 +304,7 @@ esp_err_t readTCP(CmdReq_st *cmd_req_s)
     }
 
     cmd_req_s->cmd = (CommandCode)_buf[1];
+    cmd_req_s->size = len;
     cmd_req_s->val = _buf[8];
 
     // 로그

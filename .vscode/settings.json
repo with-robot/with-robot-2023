@@ -64,12 +64,15 @@
     "array": "cpp",
     "string": "cpp",
     "string_view": "cpp",
-    "cstdint": "cpp"
+    "cstdint": "cpp",
+    "regex": "cpp"
   },
-  "C_Cpp.default.compilerPath": "cl.exe",
+  // "C_Cpp.default.compilerPath": "cl.exe",
   "colcon.provideTasks": true,
   "colcon.installType": "merged",
   "colcon.outputLevel": "warning",
   "colcon.refreshOnConfigurationChanged": true,
-  "colcon.rosInstallPath.windows": "C:\\opt\\ros\\humble\\x64"
+  "colcon.rosInstallPath.windows": "C:\\opt\\ros\\humble\\x64",
+  "cmake.sourceDirectory": "D:/Projects_robot/workspace/robot2/ros2/build/inf/inf__py",
+  "C_Cpp.errorSquiggles": "disabled"
 }

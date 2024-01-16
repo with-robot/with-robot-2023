@@ -3,7 +3,7 @@
 #include "esp_camera.h"
 #include <WiFi.h>
 #include "camera_pins.h"
-#include "get_image.h"
+#include "camera_image.h"
 
 esp_err_t init_camera()
 {
@@ -30,7 +30,7 @@ esp_err_t init_camera()
     config.pixel_format = PIXFORMAT_JPEG;
     if (psramFound())
     {
-        config.frame_size = FRAMESIZE_UXGA;
+        config.frame_size = FRAMESIZE_XGA;
         config.jpeg_quality = 10;
         config.fb_count = 2;
     }

@@ -19,10 +19,11 @@ typedef struct
         0,
     };
     CommandCode cmd = __direction;
-    unsigned int val = 0;
+    unsigned int size = 1;
+    unsigned char val = 0;
 } CmdReq_st;
 
-esp_err_t cmd_handler(CommandCode cmd, unsigned int value);
+esp_err_t cmd_handler(CommandCode cmd, unsigned char value);
 
 void robot_setup();
 void robot_stop();

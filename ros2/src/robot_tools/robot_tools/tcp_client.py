@@ -12,9 +12,9 @@ from cv_bridge import CvBridge, CvBridgeError
 import numpy as np
 import sensor_msgs.msg as sensor
 
-#
+# Result
 OK = "OK"
-FAIL = "FAIL"
+FAIL = ""
 
 # command
 CMD_CFG = 0x01
@@ -62,10 +62,9 @@ class TCPClient:
         while len(buf) < length:
             data = self.client_socket.recv(length - len(buf))
             if not data:
-                time.sleep(0.1)
-                continue
+                raise Exception("수신 실패..")
             buf.extend(data)
-        assert len(buf) == length, f"{len(buf)} != {length}"
+
         return buf
 
     def write(self, payload):
@@ -144,12 +143,15 @@ class RobotProxy:
 
         if not cmd in cmd_map:
             raise Exception("사용할 수 없는 명령코드 입력[{cmd}]")
+        try:
+            self._send_data(cmd_map.get(cmd), [message])
 
-        self._send_data(cmd_map.get(cmd), [message])
+            rx_buf: bytearray = self._read_data(interesting=CMD_CFG)
+            if not rx_buf or rx_buf[3] != 1:
+                raise Exception()
 
-        rx_buf: bytearray = self._read_data(interesting=CMD_CFG)
-        if not rx_buf or rx_buf[3] != 1:
-            self.logger.info(f"로봇으로부터 메시지 수신 실패")
+        except Exception as e:
+            self.logger.error(f"로봇으로부터 메시지 수신 실패")
             return FAIL
 
         self.logger.info(f"recv_msg:: {','.join([format(x,'02X') for x in rx_buf])}")
@@ -158,11 +160,15 @@ class RobotProxy:
     def capture_image(self) -> Union[sensor.Image, None]:
         self.logger.info(f"화면이미지를 요청합니다.")
 
-        self._send_data(cmd_map.get("noti_cam"), [00])
+        try:
+            self._send_data(cmd_map.get("noti_cam"), [00])
 
-        rx_buf = self._read_data(interesting=NOTI_CAM)
-        if not rx_buf or rx_buf[3] != 1:
-            return None
+            rx_buf = self._read_data(interesting=NOTI_CAM)
+            if not rx_buf or rx_buf[3] != 1:
+                raise Exception()
+
+        except Exception as e:
+            return FAIL
 
         self.logger.info(f"받은 데이터를 변환한다.")
         image = cv2.imdecode(
@@ -210,13 +216,13 @@ class RobotProxy:
 
             rx_buf.extend(self.robot.read(rx_len + 1))
 
-            self._on_receiving = False
-
             # self.logger.info(f"_read_data2={' '.join(format(x, '02x') for x in rx_buf)}")
 
         except Exception as e:
-            self.logger.error("수신 중 오류가 발생하였습니다.")
-            return None
+            raise Exception("수신 중 오류가 발생하였습니다")
+
+        finally:
+            self._on_receiving = False
 
         # checksum 체크
         if sum(rx_buf[:-1]) & 0xFF != rx_buf[-1]:
@@ -229,16 +235,21 @@ class RobotProxy:
             time.sleep(0.1)
 
         self._on_sending = True
+        try:
+            seq = next(self.seq) % 0xFE + 1
+            payload = [0xFF, command, seq, REQUEST]
+            payload.extend(len(data).to_bytes(4, byteorder="little"))
+            payload.extend(data)
+            checksum = sum(payload) & 0xFF
+            payload.append(checksum)
+            self.logger.info(f"_send_data: {payload}")
+            self.robot.write(payload)
 
-        seq = next(self.seq) % 0xFE + 1
-        payload = [0xFF, command, seq, REQUEST]
-        payload.extend(len(data).to_bytes(4, byteorder="little"))
-        payload.extend(data)
-        checksum = sum(payload) & 0xFF
-        payload.append(checksum)
-        self.logger.info(f"_send_data: {payload}")
-        self.robot.write(payload)
+        except Exception as e:
+            self.logger.error(f"_send_data={command}/{data}")
+            raise Exception(f"송신 중 오류[{e}]")
 
-        self._on_sending = False
+        finally:
+            self._on_sending = False
 
         # self.logger.info(f"_write_data={' '.join(format(x, '02x') for x in payload)}")
