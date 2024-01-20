@@ -93,11 +93,11 @@ esp_err_t initWiFi()
     return ESP_OK;
 }
 
-esp_timer_handle_t timer;
-esp_timer_create_args_t timerArgs = {
-    .callback = &timerCallback,
-    .arg = nullptr,
-    .name = "stop_car"};
+// esp_timer_handle_t timer;
+// esp_timer_create_args_t timerArgs = {
+//     .callback = &timerCallback,
+//     .arg = nullptr,
+//     .name = "stop_car"};
 
 void setup()
 {
@@ -124,10 +124,10 @@ void setup()
     }
     // 전면 LED를 점등한다.
 
-    // digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_PIN, HIGH);
     pinMode(LED_PIN, OUTPUT);
 
-    // delay(1000);
+    delay(1000);
     digitalWrite(LED_PIN, LOW);
     Serial.println("setup completed......");
 

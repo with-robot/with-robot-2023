@@ -6,11 +6,14 @@
 *********/
 #define ESP32
 // Import required libraries
-// #include <WiFi.h>
+#include <WiFi.h>
 #include <AsyncTCP.h>
-#include <ESPAsyncWebSrv.h>
-// #include <ESPAsyncWebServer.h>
+#include <ESPAsyncWebServer.h>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 #include "websocket.h"
+
 // Replace with your network credentials
 const char *ssid = "LEO24";
 const char *password = "12911990";
@@ -27,8 +30,6 @@ bool GPIO0_State = 0;
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
-PGM_P index_html = getIndexHtml();
-
 void notifyClients()
 {
   ws.textAll(String(ledState));
@@ -37,35 +38,72 @@ void notifyClients()
 void handleWebSocketMessage(AwsFrameInfo *info, uint8_t *data, size_t len)
 {
   // AwsFrameInfo *info = (AwsFrameInfo*)arg;
-  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+  Serial.println("handleWebSocketMessage1");
+  if (is_ready(info, len) == true)
   {
+    Serial.println("handleWebSocketMessage2");
     // data[len] = 0;
-    if (convert2string(data, len) == "toggle")
+    if (info->opcode == WS_TEXT && convert2string(data, len) == "toggle")
     {
-      // if (strcmp((char*)data, "toggle") == 0) {
-      ledState = !ledState;
+      Serial.println("handleWebSocketMessage3");
+      // if (info->opcode == WS_TEXT && strcmp((char *)data, "toggle") == 0)
+      // {
+      change_state(!ledState);
       notifyClients();
     }
   }
 }
-// 문자열이 들어있는 buffer를 string타입으로 변환시킨다.
-string convert2string(const uint_t *data, size_t len)
-{
-  std::stringstream ss;
-  // 16진수 0으로 초기화시킨다.
-  ss << std::hex << std::setfill('0');
 
-  for (size_t i = 0; i < len; ++i)
+void change_state(bool v)
+{
+  ledState = v;
+}
+
+bool is_ready(AwsFrameInfo *info, size_t len)
+{
+  return info->final && info->index == 0 && info->len == len;
+}
+
+// 문자열이 들어있는 buffer를 string타입으로 변환시킨다.
+std::string convert2string(const uint8_t *data, size_t len)
+{
+  //   std::stringstream ss;
+  //   // 16진수 0으로 초기화시킨다.
+  //   ss << std::hex << std::setfill('0');
+
+  //   for (size_t i = 0; i < len; ++i)
+  //   {
+  //     ss << std::setw(2) << static_cast<int>(data[i]);
+  //   }
+
+  //   Serial.printf("input string: %s\n", ss.str().c_str());
+
+  //   return ss.str();
+
+  // 입력 데이터가 유효한지 확인
+  if (data == nullptr || len == 0)
   {
-    ss << std::setw(2) << static_cast<int>(data[i])
+    // 유효하지 않은 입력 데이터 처리
+    return std::string();
   }
 
+  // std::stringstream을 사용하여 uint8_t 배열을 std::string으로 변환
+  std::stringstream ss;
+  for (size_t i = 0; i < len; ++i)
+  {
+    ss << static_cast<char>(data[i]);
+  }
+
+  // uint8_t 배열을 std::string으로 변환
+  // return std::string(reinterpret_cast<const char *>(data), len);
   return ss.str();
 }
 
 void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
              void *arg, uint8_t *data, size_t len)
 {
+  // Serial.printf("event_type:%d\n", (int)type);
+  // Serial.printf("data:%s\n", (char *)data);
   switch (type)
   {
   case WS_EVT_CONNECT:
@@ -83,17 +121,34 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   }
 }
 
+void initWifi()
+{
+  // STA모드
+  WiFi.mode(WIFI_STA);
+
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(1000);
+    Serial.println("Connecting to WiFi..");
+  }
+
+  // Print ESP Local IP Address
+  Serial.println(WiFi.localIP());
+}
+
 void initWebSocket()
 {
+  Serial.println("initalize websocket");
   ws.onEvent(onEvent);
   server.addHandler(&ws);
 }
 
-String processor(const String& var)
+String processor(const String &var)
 {
-  Serial.println(var);
   if (var == "STATE")
   {
+    Serial.println(var);
     if (ledState)
     {
       return "ON";
@@ -103,16 +158,14 @@ String processor(const String& var)
       return "OFF";
     }
   }
-  return var;
+  return String();
 }
 
 void setup()
 {
+  Serial.println('setup starts');
   // Serial port for debugging purposes
   Serial.begin(115200);
-
-  //  pinMode(ledPin, OUTPUT);
-  //  digitalWrite(ledPin, LOW);
 
   // configure GPIO4 LED PWM functionalitites
   ledcSetup(ledChannel, freq, resolution);
@@ -123,24 +176,19 @@ void setup()
   pinMode(0, INPUT);
 
   // Connect to Wi-Fi
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
-
-  // Print ESP Local IP Address
-  Serial.println(WiFi.localIP());
+  initWifi();
 
   initWebSocket();
 
   // Route for root / web page
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send_P(200, "text/html", index_html, processor); });
+            { char *index_html = getIndexHtml();
+              request->send_P(200, "text/html", index_html, processor); 
+              delete[] index_html;
+              index_html =nullptr; });
 
-  server.on("/action", HTTP_GET, [](AsyncWebServerRequest *request)
-            { request->send_P(200, "text/html", "OK"); });
+  // server.on("/action", HTTP_GET, [](AsyncWebServerRequest *request)
+  //           { request->send_P(200, "text/html", "OK"); });
 
   // Start server
   server.begin();
@@ -148,7 +196,6 @@ void setup()
 
 void loop()
 {
-
   ws.cleanupClients();
 
   ledcWrite(ledChannel, (int)(ledState));
