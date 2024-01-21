@@ -5,13 +5,20 @@
   copies or substantial portions of the Software.
 *********/
 #define ESP32
+#define __cplusplus 201103L
+
 // Import required libraries
 #include <WiFi.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <stdio.h>
+#include "esp_err.h"
+// #include "esp_log.h"
+#include "esp_spiffs.h"
 #include "websocket.h"
 
 // Replace with your network credentials
@@ -121,6 +128,44 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   }
 }
 
+void initSPIFFS()
+{
+  esp_vfs_spiffs_conf_t conf = {
+      .base_path = "/data",
+      .partition_label = NULL,
+      .max_files = 2,
+      .format_if_mount_failed = true};
+
+  esp_err_t ret = esp_vfs_spiffs_register(&conf);
+
+  if (ret != ESP_OK)
+  {
+    if (ret == ESP_FAIL)
+    {
+      ESP_LOGE(TAG, "Failed to mount or format filesystem");
+    }
+    else if (ret == ESP_ERR_NOT_FOUND)
+    {
+      ESP_LOGE(TAG, "Failed  to find SPIFFS partition");
+    }
+    else
+    {
+      ESP_LOGE(TAG, "Failed to initialize SPIFFS (%S)", esp_err_to_name(ret));
+    }
+    return;
+  }
+
+  size_t total = 0, used = 0;
+  ret = esp_spiffs_info(NULL, &total, &used);
+  if (ret != ESP_OK)
+  {
+    Serial.printf("Failed to get SPIFFS partition information (%s)\n", esp_err_to_name(ret));
+  }
+  else
+  {
+    Serial.printf("partition size: total: %d, used: %d\n", total, used);
+  }
+}
 void initWifi()
 {
   // STA모드
@@ -175,20 +220,44 @@ void setup()
   // configure GPIO0 for LED toggling
   pinMode(0, INPUT);
 
+  // mount SPIFFS
+  initSPIFFS();
+
   // Connect to Wi-Fi
   initWifi();
 
   initWebSocket();
 
   // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+  server.on("/tt", HTTP_GET, [](AsyncWebServerRequest *request)
             { char *index_html = getIndexHtml();
               request->send_P(200, "text/html", index_html, processor); 
               delete[] index_html;
-              index_html =nullptr; });
+              index_html =nullptr;
+              esp_vfs_spiffs_unregister(NULL); });
 
-  // server.on("/action", HTTP_GET, [](AsyncWebServerRequest *request)
-  //           { request->send_P(200, "text/html", "OK"); });
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+            {
+              Serial.println("Opening file");
+              std::ifstream file("/data/index.html");
+
+              if (!file.is_open())
+              {
+                Serial.println("Failed to open file for reading");
+                return;
+              }
+              std::ostringstream buffer;
+              buffer << file.rdbuf();
+
+              file.close();
+
+              const char *index_html = buffer.str().c_str();
+
+              Serial.printf("index file loaded: %s\n", index_html);
+
+              request->send_P(200, "text/html", index_html, processor);
+
+              index_html = nullptr; });
 
   // Start server
   server.begin();
