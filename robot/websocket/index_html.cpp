@@ -209,11 +209,11 @@ const char html2[] PROGMEM = R"rawliteral(
   <div class="content">
     <div class="card">
       <table align="center">
-      <tr><td colspan="3" align="center"><button class="button" onmousedown="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');" ontouchstart="forward(event);"  ontouchcancel="stop(event);" ontouchend="stop(event);">Forward</button></td></tr>
-      <tr><td align="center"><button class="button" onmousedown="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');" ontouchstart="left(event);"  ontouchcancel="stop(event);" ontouchend="stop(event);">Left</button></td><td align="center">
-      <button class="button" onmousedown="toggleCheckbox('stop');" ontouchstart="stop(event);">Stop</button></td><td align="center">
-      <button class="button" onmousedown="toggleCheckbox('right');" ontouchstart="right(event);" onmouseup="toggleCheckbox('stop');" ontouchcancel="stop(event);" ontouchend="stop(event);">Right</button></td></tr>
-      <tr><td colspan="3" align="center"><button class="button" onmousedown="toggleCheckbox('backward');" ontouchstart="backward(event);" onmouseup="toggleCheckbox('stop');" ontouchcancel="stop(event);" ontouchend="stop(event);">Backward</button></td></tr>
+      <tr><td colspan="3" align="center"><button class="button" id="forward" onmousedown="toggleCheckbox('forward');" onmouseup="toggleCheckbox('stop');" ontouchstart="forward(event);"  ontouchcancel="stop(event);" ontouchend="stop(event);">Forward</button></td></tr>
+      <tr><td align="center"><button class="button" id="left" onmousedown="toggleCheckbox('left');" onmouseup="toggleCheckbox('stop');" ontouchstart="left(event);"  ontouchcancel="stop(event);" ontouchend="stop(event);">Left</button></td><td align="center">
+      <button class="button" id="stop" onmousedown="toggleCheckbox('stop');" ontouchstart="stop(event);">Stop</button></td><td align="center">
+      <button class="button" id="right" onmousedown="toggleCheckbox('right');" ontouchstart="right(event);" onmouseup="toggleCheckbox('stop');" ontouchcancel="stop(event);" ontouchend="stop(event);">Right</button></td></tr>
+      <tr><td colspan="3" align="center"><button class="button" id="backward" onmousedown="toggleCheckbox('backward');" ontouchstart="backward(event);" onmouseup="toggleCheckbox('stop');" ontouchcancel="stop(event);" ontouchend="stop(event);">Backward</button></td></tr>
       </table>
     </div>
   </div>
@@ -247,8 +247,8 @@ const char html2[] PROGMEM = R"rawliteral(
         document.getElementById('state').innerHTML = state;
       }
     }
-    window.addEventListener('load', function(){
-    // document.addEventListener("DOMContentLoaded", function() {
+    
+    document.addEventListener("DOMContentLoaded", function() {
       const socketClient = new WebSocketClient();
       socketClient.init();
 
@@ -256,6 +256,20 @@ const char html2[] PROGMEM = R"rawliteral(
         socketClient.websocket.send('toggle');
         test('hello');
       });
+
+      document.getElementById("stop").addEventListener("mousedown", function(e) {
+        socketClient.websocket.send('stop');
+      });
+
+      for (let evt_name of ["forward","backward","left","right"]) {
+        document.getElementById(evt_name).addEventListener("mousedown", function(e) {
+          socketClient.websocket.send(evt_name);
+        });
+
+        document.getElementById(evt_name).addEventListener("mouseup", function(e) {
+         socketClient.websocket.send('stop');
+        });
+      }
     });
 
    function test(e) {
