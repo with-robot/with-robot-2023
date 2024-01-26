@@ -58,7 +58,7 @@ void handleWebSocketMessage(AwsFrameInfo *info, uint8_t *data, size_t len)
   if (is_ready(info, len) == true)
   {
     Serial.println("handleWebSocketMessage2");
-    // data[len] = 0;
+
     if (info->opcode == WS_TEXT)
     {
       String msg = convert2string(data, len);
@@ -69,21 +69,11 @@ void handleWebSocketMessage(AwsFrameInfo *info, uint8_t *data, size_t len)
       {
         // 로봇제어 호출
         result = cmd_handler(__direction, it->second);
-      }
-      else
-      {
+        Serial.printf("cmd_handler called %d\n", result);
         result = ESP_OK;
       }
     }
-    else if (info->opcode == WS_BINARY)
-    {
-      Image_st data;
-      result = capture_image(data);
-      if (result == ESP_OK)
-      {
-        ws.binaryAll(reinterpret_cast<char *>(data.buf.get()), data.size);
-      }
-    }
+
     // 처리결과를 확인한다.
     if (result == ESP_OK)
     {
@@ -271,7 +261,7 @@ void setup()
   pinMode(0, INPUT);
 
   // mount SPIFFS
-  initSPIFFS();
+  // initSPIFFS();
 
   // Connect to Wi-Fi
   initWifi();
@@ -279,19 +269,18 @@ void setup()
   initWebSocket();
 
   // Route for root / web page
-  server.on("/home", HTTP_GET, [](AsyncWebServerRequest *request)
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { char *index_html = getIndexHtml();
               request->send_P(200, "text/html", index_html, processor); 
               delete[] index_html;
-              index_html =nullptr;
-              
-              struct stat st;
-              if (stat("/public/index.htm", &st) == 0)
-              {
-                // Delete it if it exists
-                unlink("/public/index.htm");
-              }
-              esp_vfs_spiffs_unregister(NULL); });
+              index_html =nullptr; });
+  // struct stat st;
+  // if (stat("/public/index.htm", &st) == 0)
+  // {
+  //   // Delete it if it exists
+  //   unlink("/public/index.htm");
+  // }
+  // esp_vfs_spiffs_unregister(NULL); });
 
   server.on("/bak", HTTP_GET, [](AsyncWebServerRequest *request)
             {
@@ -317,7 +306,7 @@ void setup()
   // Start server
   server.begin();
 
-  // 휠 초기화
+  // 구동장치 초기설정
   robot_setup();
 
   esp_err_t result = setUp_camera();
@@ -326,20 +315,28 @@ void setup()
     Serial.printf("set-Up camera failed with error 0x%x\n", result);
     return;
   }
+  Serial.printf("카메라설정 완료\n");
 }
 
+Image_st data;
 void loop()
 {
   ws.cleanupClients();
 
   ledcWrite(ledChannel, (int)(ledState));
 
+  esp_err_t result = capture_image(data);
+  if (result == ESP_OK)
+  {
+    ws.binaryAll(reinterpret_cast<char *>(data.buf.get()), data.size);
+    Serial.println("handleWebSocket binary");
+  }
   // CSI_MCLK
   GPIO0_State = digitalRead(0);
   if (GPIO0_State == 0)
   {
     ledState = !ledState;
-    notifyClients();
+    // notifyClients();
     delay(300);
   }
 }

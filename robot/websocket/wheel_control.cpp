@@ -155,14 +155,9 @@ void robot_setup()
 
   // Motor uses PWM Channel 8
   // 0 : forward, 1:backward, 2:right, 3:left
-  ledcAttachPin(LEFT_M0, 0);  // ESP채널8을 PWM(LED제어)핀에 연결한다.
-  ledcAttachPin(LEFT_M1, 1);  // ESP채널8을 PWM(LED제어)핀에 연결한다.
-  ledcAttachPin(RIGHT_M0, 2); // ESP채널8을 PWM(LED제어)핀에 연결한다.
-  ledcAttachPin(RIGHT_M1, 3); // ESP채널8을 PWM(LED제어)핀에 연결한다.
-
-  ledcSetup(motorPWMChannnel, 2000, 8); // ESP채널번호, PWM신호의 주파수, 듀티사이클 해상도(8비트;0~255)
-
-  ledcWrite(motorPWMChannnel, motor_speed); // ESP채널번호, 듀티사이클 크기(클수록 속도가 빨라진다)
+  ledcAttachPin(12, 8);      // ESP채널8을 PWM(LED제어)핀에 연결한다.
+  ledcSetup(8, 2000, 8);     // ESP채널번호, PWM신호의 주파수, 듀티사이클 해상도(8비트;0~255)
+  ledcWrite(8, motor_speed); // ESP채널번호, 듀티사이클 크기(클수록 속도가 빨라진다)
 
   Serial.println("robot wheels setup completed.");
 }
@@ -177,14 +172,10 @@ void robot_stop()
 
 void robot_fwd()
 {
-  ledcWrite(0, motor_speed);
-  ledcWrite(1, 0);
-  ledcWrite(2, motor_speed);
-  ledcWrite(3, 0);
-  // digitalWrite(LEFT_M0, HIGH);
-  // digitalWrite(LEFT_M1, LOW);
-  // digitalWrite(RIGHT_M0, HIGH);
-  // digitalWrite(RIGHT_M1, LOW);
+  digitalWrite(LEFT_M0, HIGH);
+  digitalWrite(LEFT_M1, LOW);
+  digitalWrite(RIGHT_M0, HIGH);
+  digitalWrite(RIGHT_M1, LOW);
 }
 
 void robot_back()
