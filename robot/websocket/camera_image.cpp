@@ -90,7 +90,7 @@ esp_err_t capture_image(Image_st &data)
 {
     sensor_t *s = esp_camera_sensor_get();
     // PIXFORMAT_JPEG: 3
-    Serial.printf("s-state:%d\n", s->pixformat);
+    // Serial.printf("s-state:%d\n", s->pixformat);
 
     camera_fb_t *fb = esp_camera_fb_get();
     esp_err_t result = ESP_OK;
@@ -113,7 +113,7 @@ esp_err_t capture_image(Image_st &data)
             std::copy(fb->buf, fb->buf + fb->len, data.buf.get());
             // memcpy(data.buf, fb->buf, fb->len);
             data.size = fb->len;
-            Serial.printf("이미지 취득 완료: %d\n", result);
+            // Serial.printf("이미지 취득 완료: %d\n", result);
         }
 
         esp_camera_fb_return(fb);

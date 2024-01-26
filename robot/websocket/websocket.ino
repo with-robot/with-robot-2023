@@ -51,14 +51,10 @@ void notifyClients()
 
 void handleWebSocketMessage(AwsFrameInfo *info, uint8_t *data, size_t len)
 {
-  // AwsFrameInfo *info = (AwsFrameInfo*)arg;
-  Serial.println("handleWebSocketMessage1");
   esp_err_t result = ESP_FAIL;
 
   if (is_ready(info, len) == true)
   {
-    Serial.println("handleWebSocketMessage2");
-
     if (info->opcode == WS_TEXT)
     {
       String msg = convert2string(data, len);
@@ -329,7 +325,6 @@ void loop()
   if (result == ESP_OK)
   {
     ws.binaryAll(reinterpret_cast<char *>(data.buf.get()), data.size);
-    Serial.println("handleWebSocket binary");
   }
   // CSI_MCLK
   GPIO0_State = digitalRead(0);

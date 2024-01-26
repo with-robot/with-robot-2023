@@ -101,7 +101,13 @@ const char html_str[] PROGMEM = R"rawliteral(
 
       init() {
         console.log('Trying to open a WebSocket connection...');  
-        this.websocket = new WebSocket(gateway);      
+        try {
+            this.websocket = new WebSocket(gateway);
+        } catch (e) {
+            setTimeout(this.init.bind(this), 500);
+            return;
+        }        
+        
         this.websocket.onopen = this.onOpen.bind(this);
         this.websocket.onclose = this.onClose.bind(this);
         this.websocket.onmessage = this.onMessage.bind(this);
@@ -113,7 +119,7 @@ const char html_str[] PROGMEM = R"rawliteral(
 
       onClose(event) {
         console.log('Connection closed');
-        setTimeout(this.init.bind(this), 500);
+        setTimeout(this.init.bind(this), 1000);
       }
 
       onMessage(event) {
@@ -128,23 +134,17 @@ const char html_str[] PROGMEM = R"rawliteral(
       const socketClient = new WebSocketClient();
       socketClient.init();
 
-      // document.getElementById("button").addEventListener("click", function(e) {
-      //   socketClient.websocket.send('toggle');
-      //   test('hello');
-      // });
+      for (let evt_name of ["forward","backward","left","right","stop"]) {
+        (function(){
+          document.getElementById(evt_name).addEventListener("mousedown", (e) => {
+            socketClient.websocket.send(evt_name);
+          });
 
-      document.getElementById("stop").addEventListener("mousedown", function(e) {
-        socketClient.websocket.send('stop');
-      });
-
-      for (let evt_name of ["forward","backward","left","right"]) {
-        document.getElementById(evt_name).addEventListener("mousedown", function(e) {
-          socketClient.websocket.send(evt_name);
-        });
-
-        document.getElementById(evt_name).addEventListener("mouseup", function(e) {
-         socketClient.websocket.send('stop');
-        });
+          document.getElementById(evt_name).addEventListener("mouseup", (e) => {
+            socketClient.websocket.send('stop');
+          });
+        })(evt_name);
+        
       }
     });
 </script>
