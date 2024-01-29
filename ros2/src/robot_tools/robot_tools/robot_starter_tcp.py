@@ -3,7 +3,6 @@
 import time
 import rclpy
 from rclpy.node import Node
-from .websocket_client import RobotProxy, bridge, cv2, CvBridgeError
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 from rclpy.qos import (
@@ -13,15 +12,16 @@ from rclpy.qos import (
     QoSLivelinessPolicy,
     QoSReliabilityPolicy,
 )
+from .tcp_client import RobotProxy, bridge, cv2, CvBridgeError
 import threading
-import asyncio
+from inf.srv import WheelControlParams
 
 
 class WheelCameraNode(Node):
     robot_rebooting = False
 
     def __init__(self):
-        super().__init__("websocket_node")
+        super().__init__("tcp_agent_node")
 
         # 로봇 인스턴스 생성
         self.connect_robot()
@@ -32,10 +32,10 @@ class WheelCameraNode(Node):
         # 키보드입력 구독자 생성
         self.subscriber = self.get_subscription()
 
-    async def start_publish(self):
-        self.create_timer(10, callback=self._publish_image_raw)
-        # _t = threading.Thread(target=self._publish_image_raw, args=(3,), daemon=True)
-        # _t.start()
+    def start_publish(self):
+        _t = threading.Thread(target=self._publish_image_raw, args=(3,), daemon=True)
+        _t.start()
+
         self.get_logger().info(f"service server[{self.robot}] starts....")
 
     def get_publisher(self):
@@ -90,9 +90,7 @@ class WheelCameraNode(Node):
         # 전진, x=0.5, 후진, x=-05, 좌회전: az=0.8, 우회전: az=0.8
         self.get_logger().info(f"linear={x}, angular={az}")
 
-        result = asyncio.create_task(
-            self.robot.send_msg("direction", self.cal_val(x, az))
-        )
+        result = self.robot.send_msg("direction", self.cal_val(x, az))
         if not result:
             self.connect_robot()
 
@@ -128,57 +126,43 @@ class WheelCameraNode(Node):
 
     def _publish_image_raw(self, sleep_: int = 1):
         self.get_logger().info(f"publish_camera_img: {sleep_}")
-        import nest_asyncio
 
-        nest_asyncio.apply()
-        loop = asyncio.get_event_loop()
+        while True:
+            if self.robot_rebooting:
+                time.sleep(1)
+                continue
 
-        data: Image = loop.run_until_complete(self.robot.capture_image())
+            data: Image = self.robot.capture_image()
+            if data:
+                self.get_logger().info(f"recv encoding: {data.encoding}")
 
-        if data:
-            # self.get_logger().info(f"recv encoding: {data.encoding}")
+                try:
+                    # image = bridge.imgmsg_to_cv2(data, "bgr8")  # "bgr8"
 
-            try:
-                # image = bridge.imgmsg_to_cv2(data, "bgr8")  # "bgr8"
+                    # (rows, cols, channels) = image.shape
+                    # self.get_logger().info(
+                    #     f'shape: {str(rows)+":"+str(cols)+":"+str(channels)}'
+                    # )
+                    # cv2.imshow("Sending Image", image)
+                    # cv2.waitKey(3)
+                    self.publisher.publish(data)
 
-                # (rows, cols, channels) = image.shape
-                # self.get_logger().info(
-                #     f'shape: {str(rows)+":"+str(cols)+":"+str(channels)}'
-                # )
-                # cv2.imshow("Sending Image", image)
-                # cv2.waitKey(3)
+                except CvBridgeError as e:
+                    self.get_logger().info(e)
 
-                self.publisher.publish(data)
-                pass
-            except CvBridgeError as e:
-                self.get_logger().info(e)
-
-            # time.sleep(sleep_)
-
-
-async def spinning(node: WheelCameraNode):
-    while rclpy.ok():
-        rclpy.spin_once(node, timeout_sec=0.01)
-        await asyncio.sleep(0.001)
-
-
-async def run(args, loop: asyncio):
-    rclpy.init(args=args)
-
-    wheel_camera = WheelCameraNode()
-
-    spin_task = loop.create_task(spinning(wheel_camera))
-    connect_task = loop.create_task(wheel_camera.start_publish())
-
-    await asyncio.gather(spin_task, connect_task)
-
-    wheel_camera.destroy_node()
-    rclpy.shutdown()
+            time.sleep(sleep_)
 
 
 def main(args=None):
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run(args, loop=loop))
+    rclpy.init(args=args)
+
+    wheel_camera = WheelCameraNode()
+    wheel_camera.start_publish()
+
+    rclpy.spin(wheel_camera)  # blocked until ros2 shutdown
+
+    wheel_camera.destroy_node()
+    rclpy.shutdown()
 
 
 if __name__ == "__main__":

@@ -214,14 +214,6 @@ String processor(const String &var)
   if (var == "STATE")
   {
     return_msg = (ledState) ? "ON" : "OFF";
-    // if (ledState)
-    // {
-    //   return "ON";
-    // }
-    // else
-    // {
-    //   return "OFF";
-    // }
   }
 
   Serial.printf("var=%s, msg=%s", var, return_msg);
