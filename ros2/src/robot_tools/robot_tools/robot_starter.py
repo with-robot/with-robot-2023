@@ -15,6 +15,9 @@ from rclpy.qos import (
 )
 import threading
 import asyncio
+import nest_asyncio
+
+nest_asyncio.apply()
 
 
 class WheelCameraNode(Node):
@@ -32,9 +35,16 @@ class WheelCameraNode(Node):
         # 키보드입력 구독자 생성
         self.subscriber = self.get_subscription()
 
-    async def start_publish(self):
-        self.create_timer(10, callback=self._publish_image_raw)
-        # _t = threading.Thread(target=self._publish_image_raw, args=(3,), daemon=True)
+    def start_publish(self):
+        self.create_timer(0.1, callback=self._publish_image_raw)
+        # _t = threading.Thread(
+        #     target=self._publish_image_raw,
+        #     args=(
+        #         loop,
+        #         0.1,
+        #     ),
+        #     daemon=True,
+        # )
         # _t.start()
         self.get_logger().info(f"service server[{self.robot}] starts....")
 
@@ -73,7 +83,7 @@ class WheelCameraNode(Node):
         self.robot = RobotProxy(self.get_logger())
         self.robot_rebooting = False
         # 3초마다 체크
-        self.timer = self.create_timer(15, self.health_checking)
+        # self.timer = self.create_timer(15, self.health_checking)
 
     def _handler(self, data: Twist) -> any:
         if self.robot_rebooting:
@@ -126,13 +136,11 @@ class WheelCameraNode(Node):
             2,
         )
 
-    def _publish_image_raw(self, sleep_: int = 1):
-        self.get_logger().info(f"publish_camera_img: {sleep_}")
-        import nest_asyncio
-
-        nest_asyncio.apply()
+    def _publish_image_raw(self, sleep_: int = 0.1):
         loop = asyncio.get_event_loop()
+        # asyncio.set_event_loop(loop)
 
+        # while True:
         data: Image = loop.run_until_complete(self.robot.capture_image())
 
         if data:
@@ -149,11 +157,12 @@ class WheelCameraNode(Node):
                 # cv2.waitKey(3)
 
                 self.publisher.publish(data)
-                pass
+
             except CvBridgeError as e:
                 self.get_logger().info(e)
-
-            # time.sleep(sleep_)
+                # break
+                #
+        # time.sleep(sleep_)
 
 
 async def spinning(node: WheelCameraNode):
@@ -166,11 +175,13 @@ async def run(args, loop: asyncio):
     rclpy.init(args=args)
 
     wheel_camera = WheelCameraNode()
+    wheel_camera.start_publish()
 
     spin_task = loop.create_task(spinning(wheel_camera))
-    connect_task = loop.create_task(wheel_camera.start_publish())
+    # connect_task = loop.create_task(wheel_camera.start_publish())
 
-    await asyncio.gather(spin_task, connect_task)
+    # await asyncio.gather(spin_task, connect_task)
+    await spin_task
 
     wheel_camera.destroy_node()
     rclpy.shutdown()

@@ -88,8 +88,7 @@ class WebSocketClient:
 
     def disconnect(self):
         if self.client_socket:
-            # self.client_socket.disconnect()
-            """"""
+            self.client_socket.disconnect()
 
 
 # url = "ws://192.168.10.102/ws"
@@ -163,7 +162,7 @@ class RobotProxy:
     async def capture_image(self) -> Union[sensor.Image, None]:
         import numpy as np
 
-        self.logger.info(f"화면이미지를 요청합니다.")
+        # self.logger.info(f"화면이미지를 요청합니다.")
 
         try:
             rx_buf = await self.robot.read_data()
@@ -171,10 +170,10 @@ class RobotProxy:
             image_array = np.frombuffer(rx_buf, dtype=np.uint8)
 
         except Exception as e:
-            self.logger.info(f"FAIL")
+            self.logger.info(f"{str(e)}")
             return FAIL
 
-        self.logger.info(f"받은 데이터를 변환한다.")
+        # self.logger.info(f"받은 데이터를 변환한다.")
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
         # cv2.imwrite("test.jpg", image)
         # cv2.imshow("image", image)
