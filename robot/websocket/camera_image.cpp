@@ -1,6 +1,6 @@
 #define CAMERA_MODEL_AI_THINKER // Has PSRAM
 #include <memory>
-#include <string.h>
+// #include <string>
 #include "esp_camera.h"
 #include <WiFi.h>
 #include "camera_pins.h"
@@ -10,7 +10,7 @@ esp_err_t init_camera()
 {
     camera_config_t config;
     config.ledc_channel = LEDC_CHANNEL_1;
-    config.ledc_timer = LEDC_TIMER_1;
+    config.ledc_timer = LEDC_TIMER_2;
     config.pin_d0 = Y2_GPIO_NUM;
     config.pin_d1 = Y3_GPIO_NUM;
     config.pin_d2 = Y4_GPIO_NUM;
@@ -45,11 +45,14 @@ esp_err_t init_camera()
     return esp_camera_init(&config);
 }
 
-esp_err_t setUp_camera()
+esp_err_t setup_camera()
 {
     esp_err_t err = init_camera();
     if (err != ESP_OK)
+    {
+        Serial.printf("set-Up camera failed with error 0x%x\n", err);
         return err;
+    }
 
     sensor_t *s = esp_camera_sensor_get();
     if (s->id.PID == OV3660_PID)
@@ -83,6 +86,7 @@ esp_err_t setUp_camera()
     s->set_dcw(s, 1);                        // 0 = disable , 1 = enable
     s->set_colorbar(s, 0);                   // 0 = disable , 1 = enable
 
+    Serial.println("카메라설정 완료");
     return ESP_OK;
 }
 
@@ -101,21 +105,7 @@ esp_err_t capture_image(Image_st &data)
     }
     else
     {
-        data.buf = std::unique_ptr<uint8_t[]>(new uint8_t[fb->len]);
-        //(uint8_t *)malloc(sizeof(uint8_t) * fb->len);
-        if (data.buf == NULL)
-        {
-            Serial.println("이미지 저장용 메모리 할당오류!!!\n");
-            result = ESP_ERR_NO_MEM;
-        }
-        else
-        {
-            std::copy(fb->buf, fb->buf + fb->len, data.buf.get());
-            // memcpy(data.buf, fb->buf, fb->len);
-            data.size = fb->len;
-            // Serial.printf("이미지 취득 완료: %d\n", result);
-        }
-
+        data.copy(fb->buf, fb->len);
         esp_camera_fb_return(fb);
         fb = NULL;
     }

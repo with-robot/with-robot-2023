@@ -11,7 +11,9 @@ from cv_bridge import CvBridge, CvBridgeError
 import sensor_msgs.msg as sensor, image_geometry
 from time import sleep
 import websockets
+import nest_asyncio
 
+nest_asyncio.apply()
 # Result
 OK = "OK"
 FAIL = ""
@@ -38,13 +40,15 @@ cmd_map = {
     "nostop": 0x52,
     "direction": 0x53,
     "noti_cam": 0x81,
+    "health_chk": 0x82,
 }
 
 
 class WebSocketClient:
     def __init__(self, host, port):
         # init socket
-        con_ = self.create_connection(uri=f"ws://{host}/ws")
+        self.uri = f"ws://{host}:{port}/ws"
+        con_ = self.create_connection(uri=self.uri)
         if not con_:
             raise Exception("connect fail")
         self.client_socket = con_
@@ -63,32 +67,39 @@ class WebSocketClient:
                 break
         return _client_socket
 
-    # websocket에 메시지를 보낸다.
-    async def send_data(self, data) -> None:
-        send_cnt = 0
-        while send_cnt < 3:
-            try:
-                await self.client_socket.send(data)
-                break
-            except Exception as e:
-                send_cnt += 1
-                await asyncio.sleep(1)
-
-        if send_cnt >= 3:
-            raise TimeoutError("3회 시도 초과했습니다.")
-
-        await asyncio.sleep(0)
+    # websocket에 메시지를 보낸다. 그 성공여부를 보낸다.
+    # WebSocketClientProtocol
+    async def send_data(self, data) -> str:
+        try:
+            async with self.client_socket as websocket:
+                await websocket.send(data)
+        except Exception as e:
+            """"""
+            return FAIL
+        return OK
 
     # 사진 이미지를 수신받는다.
     async def read_data(self) -> object:
-        async with self.client_socket as websocket:
-            message = await websocket.recv()
+        count: int = 0
+        message: str = None
+        while count < 3:
+            try:
+                async with self.client_socket as websocket:
+                    message = await websocket.recv()
+                break
+            except Exception as e:
+                try:
+                    self.client_socket = self.create_connection(uri=self.uri)
+                    count += 1
+                except Exception as e:
+                    """"""
+                sleep(1)
 
         return message
 
     def disconnect(self):
         if self.client_socket:
-            self.client_socket.disconnect()
+            self.client_socket.close()
 
 
 # url = "ws://192.168.10.102/ws"
@@ -113,36 +124,26 @@ class RobotProxy:
         if RobotProxy.alive and cls.robot:
             return
 
-        cls.robot = WebSocketClient(cls.host, cls.port)
+        cls.robot: WebSocketClient = WebSocketClient(cls.host, cls.port)
         cls.alive = True
 
         logger.info(f"로봇이 연결되었습니다....{cls.robot}")
 
     def __init__(self, logger: any = None):
         # state info
-        self.cfg = {"noti_imu": 0}
-        self.led = 0
         self.cam = None
         self.logger = logger
-        # unique seq counter
-        self.seq = itertools.count()
-        self._on_sending = False
-        self._on_receiving = False
 
     def disconnect(self):
         self.robot.disconnect()
 
     def is_alive(self):
-        try:
-            self.robot.write("toggle")
-            self.logger.info("health check OK")
-            RobotProxy.alive = True
-        except Exception:
-            RobotProxy.alive = False
+        result = asyncio.run(self.send_msg("health_chk", "chk"))
+        RobotProxy.alive = result == OK
 
         return RobotProxy.alive
 
-    async def send_msg(self, cmd: int, message: int) -> str:
+    async def send_msg(self, cmd: str, message: str) -> str:
         self.logger.info(
             f"send_msg: cmd={cmd}, map_cmd={cmd_map.get(cmd)}, data={message}"
         )
@@ -150,7 +151,8 @@ class RobotProxy:
         if not cmd in cmd_map:
             raise Exception("사용할 수 없는 명령코드 입력[{cmd}]")
         try:
-            await self._send_data(cmd_map.get(cmd), [message])
+            send_msg = f"{cmd},{message}"
+            await self.robot.send_data(send_msg)
 
         except Exception as e:
             self.logger.error(f"로봇으로부터 메시지 수신 실패")
@@ -175,18 +177,6 @@ class RobotProxy:
 
         # self.logger.info(f"받은 데이터를 변환한다.")
         image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-        # cv2.imwrite("test.jpg", image)
-        # cv2.imshow("image", image)
-        # cv2.waitKey(1)
         imgmsg = bridge.cv2_to_imgmsg(image, encoding="bgr8")
 
         return imgmsg
-
-    def _is_NOTI_CAM(self, buf: bytearray) -> bool:
-        return buf[1] == NOTI_CAM
-
-    async def _send_data(self, command, data):
-        self.logger.info(f"cmd={command},data={data}")
-        await self.robot.send_data(data)
-
-        # self.logger.info(f"_write_data={' '.join(format(x, '02x') for x in payload)}")

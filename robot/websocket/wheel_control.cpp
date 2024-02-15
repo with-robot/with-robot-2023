@@ -7,54 +7,31 @@
   DroneBot Workshop 2021
   https://dronebotworkshop.com
 */
+#include <map>
+#include "Arduino.h"
 #include "esp_timer.h"
 #include "esp_camera.h"
-#include "Arduino.h"
 #include "wheel_control.h"
 
-// TB6612FNG H-Bridge Connections (both PWM inputs driven by GPIO 12)
-#define MTR_PWM 12
-#define LEFT_M0 15
-#define LEFT_M1 13
-#define RIGHT_M0 14
-#define RIGHT_M1 2
-
+std::map<String, int> directionMap;
+WheelControl cntl;
 // Define Speed variables
 int speed = 255;
 int noStop = 0;
 
-// Setting Motor PWM properties
-const int freq = 2000;
-const int motorPWMChannnel = 8;
-const int lresolution = 8;
-
 volatile unsigned int motor_speed = 50;
 volatile unsigned long move_interval = 1000;
-uint8_t robo = 0;
+unsigned int _map_range_max(unsigned char val, int in_range, int out_max);
 
-// Placeholder for functions
-void robot_setup();
-void robot_stop();
-void robot_fwd();
-void robot_back();
-void robot_left();
-void robot_right();
-unsigned int map_range_255(unsigned char val);
+void _bind_channel(uint8_t channel, uint8_t pin, double freq, uint8_t res, uint32_t val);
 
-enum ststate
+esp_err_t cmd_handler(CommandCode code, unsigned char value, int speed_delta)
 {
-  fwd,
-  rev,
-  stp // stop
-};
-ststate actstate = stp;
-
-esp_err_t cmd_handler(CommandCode code, unsigned char value)
-{
-  int val = map_range_255(value);
+  int val = _map_range_max(value, 100, 255);
+  int sp = 30 + speed_delta;
   int res = 0;
 
-  Serial.printf("commandCode=%d, value=%x\n", code, value);
+  Serial.printf("commandCode=%d, value=%x, speed=%d\n", code, value, speed);
   // previous_time = millis(); //요청받은 시간을 기준으로 한다.
 
   // Look at values within URL to determine function
@@ -85,7 +62,7 @@ esp_err_t cmd_handler(CommandCode code, unsigned char value)
   }
   else if (code == __speed)
   {
-    ledcWrite(motorPWMChannnel, val); // #8
+    ledcWrite(8, val); // #8
   }
   else if (code == __nostop)
   {
@@ -93,36 +70,32 @@ esp_err_t cmd_handler(CommandCode code, unsigned char value)
   }
   else if (code == __direction)
   {
-    robo = 1;
-    if (value == 1)
-    {
-      Serial.println("Forward");
-      robot_fwd();
-    }
-    else if (value == 2)
-    {
-      Serial.println("TurnLeft");
-      robot_left();
-    }
-    else if (value == 0)
-    {
-      robot_stop();
-      Serial.println("Stop");
-      robo = 0;
-    }
-    else if (value == 3)
-    {
-      Serial.println("TurnRight");
-      robot_right();
-    }
-    else if (value == 4)
-    {
-      Serial.println("Backward");
-      robot_back();
-    }
-    if (noStop != 1)
-    {
-    }
+    ledcWrite(8, sp); // #8
+    cntl.operate(static_cast<int>(value));
+
+    // if (value == 1)
+    // {
+    //   robot_fwd();
+    // }
+    // else if (value == 2)
+    // {
+    //   robot_left();
+    // }
+    // else if (value == 0)
+    // {
+    //   robot_stop();
+    // }
+    // else if (value == 3)
+    // {
+    //   robot_right();
+    // }
+    // else if (value == 4)
+    // {
+    //   robot_back();
+    // }
+    // if (noStop != 1)
+    // {
+    // }
   }
   else
   {
@@ -132,18 +105,41 @@ esp_err_t cmd_handler(CommandCode code, unsigned char value)
   return ESP_OK;
 }
 
-// 범위변환 0~100 => 0~255
-unsigned int map_range_255(unsigned char val)
-{
-  if (val > 100)
-    val = 100;
-  else if (val < 0)
-    val = 0;
-  return map(val, 0, 100, 0, 255);
-}
-
 void robot_setup()
 {
+  // Configure Control keys
+  directionMap["forward"] = 1;
+  directionMap["backward"] = 4;
+  directionMap["left"] = 2;
+  directionMap["right"] = 3;
+  directionMap["stop"] = 0;
+
+  // configure GPIO4 LED PWM functionalitites
+  // channel, pin, freq, val
+  uint8_t channel = 7;
+  uint8_t pin = 4;
+  uint8_t resolution = 8;
+  _bind_channel(channel, pin, 1000, resolution, 0);
+
+  // LED blinking for some time when it boots.
+  for (int i = 0; i < 5; i++)
+  {
+    ledcWrite(channel, 10); // flash led
+    delay(50);
+    ledcWrite(channel, 0);
+    delay(50);
+  }
+  ledcWrite(channel, 0);
+
+  // Motor uses PWM Channel 8
+  // channel, pin, freq, val
+  // 1 : forward, 2:backward, 3:left, 4:right, 0:stop
+  channel = 8;
+  pin = 12;
+  uint32_t default_speed = 30;
+  // uint8_t timer=((chan/2)%4);
+  _bind_channel(channel, pin, 2000, resolution, default_speed);
+
   // Pins for Motor Controller
   pinMode(LEFT_M0, OUTPUT);
   pinMode(LEFT_M1, OUTPUT);
@@ -153,17 +149,23 @@ void robot_setup()
   // Make sure we are stopped
   robot_stop();
 
-  // Motor uses PWM Channel 8
-  // 0 : forward, 1:backward, 2:right, 3:left
-  ledcAttachPin(12, 8);      // ESP채널8을 PWM(LED제어)핀에 연결한다.
-  ledcSetup(8, 2000, 8);     // ESP채널번호, PWM신호의 주파수, 듀티사이클 해상도(8비트;0~255)
-  ledcWrite(8, motor_speed); // ESP채널번호, 듀티사이클 크기(클수록 속도가 빨라진다)
-
   Serial.println("robot wheels setup completed.");
+}
+
+// channel 연결
+void _bind_channel(uint8_t channel, uint8_t pin, double freq, uint8_t res, uint32_t val)
+{
+  // ESP채널번호, PWM신호의 주파수, 듀티사이클 해상도(8비트;0~255)
+  ledcSetup(channel, freq, res);
+  // ESP채널8을 PWM(LED제어)핀에 연결한다.
+  ledcAttachPin(pin, channel);
+  // ESP채널번호, 듀티사이클 크기(클수록 속도가 빨라진다)
+  ledcWrite(channel, val);
 }
 
 void robot_stop()
 {
+  Serial.println("stop");
   digitalWrite(LEFT_M0, LOW);
   digitalWrite(LEFT_M1, LOW);
   digitalWrite(RIGHT_M0, LOW);
@@ -172,6 +174,7 @@ void robot_stop()
 
 void robot_fwd()
 {
+  Serial.println("Forward");
   digitalWrite(LEFT_M0, HIGH);
   digitalWrite(LEFT_M1, LOW);
   digitalWrite(RIGHT_M0, HIGH);
@@ -180,6 +183,7 @@ void robot_fwd()
 
 void robot_back()
 {
+  Serial.println("Backward");
   digitalWrite(LEFT_M0, LOW);
   digitalWrite(LEFT_M1, HIGH);
   digitalWrite(RIGHT_M0, LOW);
@@ -191,6 +195,7 @@ void robot_back()
 // RIGHT_M0와 RIGHT_M1을 동일하게 설정하면(모두 HIGH 혹은 LOW) 정지
 void robot_right()
 {
+  Serial.println("TurnRight");
   digitalWrite(LEFT_M0, HIGH);
   digitalWrite(LEFT_M1, LOW);
   digitalWrite(RIGHT_M0, LOW);
@@ -199,8 +204,48 @@ void robot_right()
 
 void robot_left()
 {
+  Serial.println("TurnLeft");
   digitalWrite(LEFT_M0, LOW);
   digitalWrite(LEFT_M1, HIGH);
   digitalWrite(RIGHT_M0, HIGH);
   digitalWrite(RIGHT_M1, LOW);
+}
+
+// 범위변환 0~100 => 0~255
+unsigned int _map_range_max(unsigned char val, int in_range, int out_max)
+{
+  if (val > in_range)
+    val = in_range;
+  else if (val < 0)
+    val = 0;
+  return map(val, 0, in_range, 0, out_max);
+}
+
+WheelControl::WheelControl()
+{
+  // 배열 초기화
+  op_cntrl[0] = {LOW, LOW, LOW, LOW};   // stop
+  op_cntrl[1] = {HIGH, LOW, HIGH, LOW}; // forward
+  op_cntrl[2] = {LOW, HIGH, HIGH, LOW}; // left
+  op_cntrl[3] = {HIGH, LOW, LOW, HIGH}; // right
+  op_cntrl[4] = {LOW, HIGH, LOW, HIGH}; // backward
+
+  // 문자열 배열 초기화
+  op_nm[0] = "stop";
+  op_nm[1] = "forward";
+  op_nm[2] = "left";
+  op_nm[3] = "right";
+  op_nm[4] = "backward";
+}
+// 모터 동작
+void WheelControl::operate(int op_cmd)
+{
+  Serial.println(op_nm[op_cmd]);
+
+  std::array<byte, 4> pos = op_cntrl[op_cmd];
+
+  digitalWrite(LEFT_M0, pos[0]);
+  digitalWrite(LEFT_M1, pos[1]);
+  digitalWrite(RIGHT_M0, pos[2]);
+  digitalWrite(RIGHT_M1, pos[3]);
 }

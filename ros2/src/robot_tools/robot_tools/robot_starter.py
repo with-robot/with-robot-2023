@@ -69,23 +69,24 @@ class WheelCameraNode(Node):
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             liveliness=QoSLivelinessPolicy.AUTOMATIC,
         )
-        return self.create_subscription(Twist, "/cmd_vel", self._handler, qos_profile)
+        return self.create_subscription(Twist, "/cmd_vel", self.handler, qos_profile)
 
     def health_checking(self):
         if not self.robot.is_alive():
+            self.robot_rebooting = True
             self.timer.cancel()
-            self.robot.disconnect()
+            self.robot = None
             self.get_logger().info(f"reconnecting the robot...")
             self.connect_robot()
+        self.robot_rebooting = False
 
     def connect_robot(self):
-        self.robot_rebooting = True
+        self.get_logger().info(f"start connect robot.....")
         self.robot = RobotProxy(self.get_logger())
-        self.robot_rebooting = False
         # 3초마다 체크
-        # self.timer = self.create_timer(15, self.health_checking)
+        self.timer = self.create_timer(3, self.health_checking)
 
-    def _handler(self, data: Twist) -> any:
+    def handler(self, data: Twist) -> any:
         if self.robot_rebooting:
             time.sleep(0.1)
             return
@@ -100,53 +101,23 @@ class WheelCameraNode(Node):
         # 전진, x=0.5, 후진, x=-05, 좌회전: az=0.8, 우회전: az=0.8
         self.get_logger().info(f"linear={x}, angular={az}")
 
-        result = asyncio.create_task(
-            self.robot.send_msg("direction", self.cal_val(x, az))
-        )
+        # 메시지 구성: cmd, x, az
+        cmd = "direction"
+        msg = f"{x},{az}"
+        result = asyncio.create_task(self.robot.send_msg(cmd=cmd, message=msg))
         if not result:
             self.connect_robot()
 
-    def cal_val(self, x: float, Z: float) -> bytes:
-        # cmd #83  val: - 4비트X 0~15:4비트Z ; 중심 7
-        # 직진좌회전  71 x:0.5, z: 1.0       0001 0001
-        # 직진        72  x:0.5             0001 0000     i
-        # 직진우회전  73 x:0.5, z: -1.0      0001 1001
-        # 좌회전      74    z:1.0           0000 0001
-        # 우회전      75    z:-1.0          0000 1001
-        # 정지        76                    0000 0000
-        # 좌측후진    77    x:-0.5, z:-1.0  1001 1001      m
-        # 후진        78     x:-0.5         1001 0000      ,
-        # 우측후진    79   x:-0.5, z:1.0    1001 0001
-        # 회전 #83
-        # cmd #84  val - 라인속도 10%
-        # cmd #85  val - 각속도 10%
-
-        # cmd #85  val - 최대속도 10%
-        # x값을 4비트로 변환한다.
-        self.get_logger().info(f"x={x}, Z={Z}")
-
-        l_sign = "0" if x >= 0 else "1"
-        x = min(7, int(abs(x) / 0.49))
-
-        a_sign = "0" if Z >= 0 else "1"
-        Z = min(7, int(abs(Z / 0.95)))
-        # 4비트 첫자리는 모터/각도 방향
-        return int(
-            l_sign + format(x, "03b") + a_sign + format(Z, "03b"),
-            2,
-        )
-
-    def _publish_image_raw(self, sleep_: int = 0.1):
+    def _publish_image_raw(self):
         loop = asyncio.get_event_loop()
-        # asyncio.set_event_loop(loop)
 
-        # while True:
-        data: Image = loop.run_until_complete(self.robot.capture_image())
+        try:
+            # while True:
+            data: Image = loop.run_until_complete(self.robot.capture_image())
 
-        if data:
-            # self.get_logger().info(f"recv encoding: {data.encoding}")
+            if data:
+                # self.get_logger().info(f"recv encoding: {data.encoding}")
 
-            try:
                 # image = bridge.imgmsg_to_cv2(data, "bgr8")  # "bgr8"
 
                 # (rows, cols, channels) = image.shape
@@ -158,11 +129,8 @@ class WheelCameraNode(Node):
 
                 self.publisher.publish(data)
 
-            except CvBridgeError as e:
-                self.get_logger().info(e)
-                # break
-                #
-        # time.sleep(sleep_)
+        except CvBridgeError as e:
+            self.get_logger().info(e)
 
 
 async def spinning(node: WheelCameraNode):

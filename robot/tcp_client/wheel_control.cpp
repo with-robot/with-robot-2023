@@ -39,7 +39,7 @@ void robot_fwd();
 void robot_back();
 void robot_left();
 void robot_right();
-unsigned int map_range_255(unsigned char val);
+unsigned int _map_range_255(unsigned char val);
 
 enum ststate
 {
@@ -51,7 +51,7 @@ ststate actstate = stp;
 
 esp_err_t cmd_handler(CommandCode code, unsigned char value)
 {
-  int val = map_range_255(value);
+  int val = _map_range_255(value);
   int res = 0;
 
   Serial.printf("commandCode=%d, value=%x\n", code, value);
@@ -140,7 +140,7 @@ esp_err_t cmd_handler(CommandCode code, unsigned char value)
 }
 
 // 범위변환 0~100 => 0~255
-unsigned int map_range_255(unsigned char val)
+unsigned int _map_range_255(unsigned char val)
 {
   if (val > 100)
     val = 100;

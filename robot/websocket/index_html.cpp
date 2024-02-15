@@ -92,7 +92,6 @@ const char html_str[] PROGMEM = R"rawliteral(
   <script>
   // var gateway = 'ws://${window.location.hostname}/ws';
   const gateway = "ws://192.168.10.102/ws";
-  
 
   class WebSocketClient {
       constructor() {
@@ -103,14 +102,15 @@ const char html_str[] PROGMEM = R"rawliteral(
         console.log('Trying to open a WebSocket connection...');  
         try {
             this.websocket = new WebSocket(gateway);
+            
+            this.websocket.onopen = this.onOpen.bind(this);
+            this.websocket.onclose = this.onClose.bind(this);
+            this.websocket.onmessage = this.onMessage.bind(this);
+        
         } catch (e) {
             setTimeout(this.init.bind(this), 500);
             return;
         }        
-        
-        this.websocket.onopen = this.onOpen.bind(this);
-        this.websocket.onclose = this.onClose.bind(this);
-        this.websocket.onmessage = this.onMessage.bind(this);
       }
 
       onOpen(event) {
@@ -119,7 +119,7 @@ const char html_str[] PROGMEM = R"rawliteral(
 
       onClose(event) {
         console.log('Connection closed');
-        setTimeout(this.init.bind(this), 1000);
+        setTimeout(this.init.bind(this), 10);
       }
 
       onMessage(event) {
@@ -134,19 +134,28 @@ const char html_str[] PROGMEM = R"rawliteral(
       const socketClient = new WebSocketClient();
       socketClient.init();
 
-      for (let evt_name of ["forward","backward","left","right","stop"]) {
-        (function(){
-          document.getElementById(evt_name).addEventListener("mousedown", (e) => {
-            socketClient.websocket.send(evt_name);
-          });
+      const events = {forward:"1.0,0.0", backward:"-1.0,0.0", left:"0.0,-1.0", right:"0.0,1.0", stop:"0.0,0.0"};
 
-          document.getElementById(evt_name).addEventListener("mouseup", (e) => {
-            socketClient.websocket.send('stop');
-          });
-        })(evt_name);
-        
+      const handleMouse = (e, evt_key, ms) => {
+        e.preventDefault(); // 연속호출 차단
+        if(this.timer) clearTimeout(this.timer);
+        this.timer = setTimeout(()=>{socketClient.websocket.send("129,"+events[evt_key]);}, ms);
       }
+
+      const addEventListeners = (evt_key) => {
+        const element = document.getElementById(evt_name);
+        element.addEventListener("mousedown", (e) => {handleMouse(e,evt_key, 10);});
+
+        if(evt_name != "stop") {
+          element.addEventListener("mouseup", (e) => {handleMouse(e,evt_key, 100);});
+          }
+      }
+
+      // const events = ["forward", "backward", "left", "right", "stop"];
+      
+      Object.keys(events).forEach(addEventListeners);
     });
+    
 </script>
 </body>
 </html>
