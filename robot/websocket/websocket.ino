@@ -33,13 +33,17 @@ void setup()
 {
   // Serial port for debugging purposes
   Serial.begin(115200);
-  Serial.println("setup starts");
+  Serial.setDebugOutput(true);
+  Serial.println("setup is starting");
 
-  // Connect to Wi-Fi
-  initWifi();
+  // 카메라설정
+  setup_camera();
+
   // 구동장치 초기설정
   robot_setup();
 
+  // Connect to Wi-Fi
+  initWifi();
   // mount SPIFFS
   // initSPIFFS();
 
@@ -48,9 +52,6 @@ void setup()
 
   // Start server
   start_server();
-
-  // 카메라설정
-  setup_camera();
 }
 
 void loop()
@@ -87,7 +88,7 @@ void initWifi()
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(800);
+    delay(500);
     Serial.print(".");
   }
   // Print ESP Local IP Address

@@ -91,7 +91,7 @@ const char html_str[] PROGMEM = R"rawliteral(
   
   <script>
   // var gateway = 'ws://${window.location.hostname}/ws';
-  const gateway = "ws://192.168.10.102/ws";
+  const gateway = "ws://192.168.10.110/ws";
 
   class WebSocketClient {
       constructor() {
@@ -138,15 +138,15 @@ const char html_str[] PROGMEM = R"rawliteral(
 
       const handleMouse = (e, evt_key, ms) => {
         e.preventDefault(); // 연속호출 차단
-        if(this.timer) clearTimeout(this.timer);
+        if(this.timer) {clearTimeout(this.timer);}
         this.timer = setTimeout(()=>{socketClient.websocket.send("129,"+events[evt_key]);}, ms);
       }
 
       const addEventListeners = (evt_key) => {
-        const element = document.getElementById(evt_name);
+        const element = document.getElementById(evt_key);
         element.addEventListener("mousedown", (e) => {handleMouse(e,evt_key, 10);});
 
-        if(evt_name != "stop") {
+        if(evt_key != "stop") {
           element.addEventListener("mouseup", (e) => {handleMouse(e,evt_key, 100);});
           }
       }
